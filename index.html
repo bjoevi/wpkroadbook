@@ -204,8 +204,8 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 </fieldset>
 
 <div class="panel"><h2>Karten</h2><div class="g">
-<div><label for="tiles">Kartenquelle (nur für dich)</label><select id="tiles"><option value="carto">CARTO Voyager</option><option value="osmde">OpenStreetMap Deutschland</option><option value="topo">OpenTopoMap</option></select></div></div>
-<div class="row"><button type="button" id="btnMaps">Karten neu erzeugen</button><span class="small" style="display:inline">Zeigt eine Karte „Access blocked“ oder bleibt leer, andere Kartenquelle wählen.</span></div></div>
+<div><label for="tiles">Kartenserver (nur für dich)</label><select id="tiles"><option value="osm">OpenStreetMap</option><option value="osmde">OpenStreetMap Deutschland</option></select></div></div>
+<div class="row"><button type="button" id="btnMaps">Karten neu erzeugen</button><span class="small" style="display:inline">Alle Karten stammen von OpenStreetMap. Zeigt eine Karte „Access blocked“ oder bleibt sie leer, die andere OpenStreetMap-Quelle wählen.</span></div></div>
 </section>
 
 <section id="v-roadbook" hidden>
@@ -259,9 +259,9 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 var LOGO='data:image/png;base64,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';
 var KEY='roadbook-v2',MKEY='roadbook-maps-v1',PKEY='roadbook-prefs';
 var VAL='https://valhalla1.openstreetmap.de/route',OSRM='https://router.project-osrm.org/route/v1/driving/',NOM='https://nominatim.openstreetmap.org/search';
-var TS={carto:{max:19,u:['https://a.basemaps.cartocdn.com/rastertiles/voyager/','https://b.basemaps.cartocdn.com/rastertiles/voyager/'],a:'© OpenStreetMap-Mitwirkende © CARTO'},
- osmde:{max:19,u:['https://tile.openstreetmap.de/'],a:'© OpenStreetMap-Mitwirkende'},
- topo:{max:17,u:['https://a.tile.opentopomap.org/','https://b.tile.opentopomap.org/'],a:'© OpenStreetMap-Mitwirkende, SRTM | © OpenTopoMap'}};
+var OSMORG='https://tile.openstreetmap.org/',OSMDE='https://tile.openstreetmap.de/',LOCALFILE=location.protocol==='file:';
+var TS={osm:{max:19,u:LOCALFILE?[OSMDE,OSMORG]:[OSMORG,OSMDE],a:'© OpenStreetMap-Mitwirkende'},
+ osmde:{max:19,u:[OSMDE,OSMORG],a:'© OpenStreetMap-Mitwirkende'}};
 var SX=[['j','Jungen'],['m','Mädchen'],['u','Unisex']],AG=[['k','Kindergarten 5–7'],['g','Grundschule 7–10'],['t','Teenager 10–15']];
 var FZ=[['pkw','Pkw'],['lkw','Lkw'],['bus','Reisebus']];
 var VT={pause:'Fahrerwechsel und Pause',halt:'Zwischenhalt',hinweis:'Hinweis / Grenze'};
@@ -279,7 +279,7 @@ function D0(){return{name:'',date:'',time:'',speed:'',maxh:'',dwell:'',fahrer:''
 var DEF={speed:70,maxh:4,dwell:30,time:'06:00'};
 function dwellDef(){return S.dwell===''||S.dwell==null?DEF.dwell:num(S.dwell);}
 var SECT={konvoi:['name','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus','truck','kontakte','infos'],strecke:['start','vias','ziel','legKm'],route:['route','teamRoutes'],fahrzeuge:['fz','teams'],bestand:['bestand','paletten']};
-var S,M={},P={tiles:'carto'},netBlocked=false,mapsFailed=false,busy=false;
+var S,M={},P={tiles:'osm'},netBlocked=false,mapsFailed=false,busy=false;
 function $(i){return document.getElementById(i);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function num(v){var n=parseFloat(v);return isNaN(n)?0:n;}
@@ -309,7 +309,9 @@ var SHARED=!!(CFG.planerEmail||CFG.teamEmail),MYNAME='';try{MYNAME=localStorage.
 var C={on:false,client:null,user:null,role:'planer',konvoi:null,ver:{},dirty:{},timer:null,chan:null,state:'',lastSave:null,members:{}};
 function saveLocal(){if(C.konvoi)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function canEdit(sec){return !C.on||C.role==='planer'||/^abgabe:/.test(sec);}
-function touch(){var secs=[].slice.call(arguments);saveLocal();if(!C.konvoi)return;secs.forEach(function(s){if(canEdit(s))C.dirty[s]=1;});clearTimeout(C.timer);C.timer=setTimeout(flush,900);setSync('busy','Ungespeicherte Änderungen');}
+function cacheKey(){return 'roadbook-cache-'+(C.konvoi?C.konvoi.id:'');}
+function saveCache(){if(!C.konvoi)return;var d={ver:C.ver,dirty:{}};Object.keys(C.dirty).forEach(function(sec){d.dirty[sec]=pack(sec);});try{if(Object.keys(d.dirty).length)localStorage.setItem(cacheKey(),JSON.stringify(d));else localStorage.removeItem(cacheKey());}catch(e){}}
+function touch(){var secs=[].slice.call(arguments);saveLocal();if(!C.konvoi)return;secs.forEach(function(s){if(canEdit(s))C.dirty[s]=1;});saveCache();clearTimeout(C.timer);C.timer=setTimeout(flush,900);setSync('busy','Ungespeicherte Änderungen');}
 function pack(sec){if(/^abgabe:/.test(sec)){var id=sec.slice(7);return clone(S.abgaben.find(function(a){return a.id===id;})||null);}var o={};SECT[sec].forEach(function(k){o[k]=S[k];});return clone(o);}
 function unpack(sec,obj){
  if(/^abgabe:/.test(sec)){var id=sec.slice(7),i=S.abgaben.findIndex(function(a){return a.id===id;});if(!obj){if(i>=0)S.abgaben.splice(i,1);return;}obj.id=id;if(i>=0)S.abgaben[i]=obj;else S.abgaben.push(obj);normalize();return;}
@@ -338,10 +340,13 @@ async function flush(){
     var msg=(e&&(e.message||e.details))||'';
     if(/konflikt/i.test(msg)){await reloadSection(sec);toast('Jemand hat „'+secName(sec)+'“ gleichzeitig geändert. Der neue Stand ist übernommen, bitte deine letzte Eingabe dort prüfen.');}
     else if(/berechtigung/i.test(msg)){toast('Keine Berechtigung zum Speichern von „'+secName(sec)+'“.');}
-    else{C.dirty[sec]=1;setSync('off','Offline – Änderungen werden nachgeholt');clearTimeout(C.timer);C.timer=setTimeout(flush,6000);return;}
+    else{C.dirty[sec]=1;saveCache();var net=/fetch|network|timeout|load failed/i.test(msg)||!(e&&e.code);
+     setSync('off',net?'Offline – Änderungen bleiben in diesem Browser und werden nachgeholt':'Speichern fehlgeschlagen: '+msg);
+     if(!net&&!C.errShown){C.errShown=true;toast('Speichern in der Datenbank fehlgeschlagen ('+msg+'). Deine Eingaben bleiben in diesem Browser erhalten, auch nach dem Neuladen. Bitte die Einrichtung laut README prüfen.');}
+     clearTimeout(C.timer);C.timer=setTimeout(flush,net?6000:20000);return;}
    }
   }
-  C.lastSave=new Date();setSync('ok',syncLabel()+' · gespeichert '+tfmt.format(C.lastSave));
+  saveCache();C.errShown=false;C.lastSave=new Date();setSync('ok',syncLabel()+' · gespeichert '+tfmt.format(C.lastSave));
  }finally{flushing=false;}
 }
 function secName(sec){return {konvoi:'Konvoi und Infos',strecke:'Strecke',route:'Route',fahrzeuge:'Fahrzeuge und Teams',bestand:'Ladeliste'}[sec]||'Abgabe';}
@@ -425,7 +430,13 @@ async function openKonvoi(k){
  C.konvoi={id:k.id,name:k.name};
  try{localStorage.setItem('roadbook-konvoi',k.id);var u=new URL(location.href);u.searchParams.set('k',k.id);history.replaceState(null,'',u.toString());}catch(e){}
  M={};try{var mm=localStorage.getItem(MKEY+'-'+k.id);if(mm)M=JSON.parse(mm)||{};}catch(e){}
+ var cache=null,restored=[],lost=[];try{cache=JSON.parse(localStorage.getItem('roadbook-cache-'+k.id)||'null');}catch(e){}
+ if(cache&&cache.dirty)Object.keys(cache.dirty).forEach(function(sec){if(!canEdit(sec))return;var sv=C.ver[sec]||0,cv=(cache.ver&&cache.ver[sec])||0;if(sv===cv){unpack(sec,clone(cache.dirty[sec]));C.dirty[sec]=1;restored.push(sec);}else lost.push(sec);});
+ normalize();
  show(null);initAll();
+ if(restored.length){toast('Nicht gespeicherte Eingaben aus diesem Browser wiederhergestellt ('+restored.map(secName).join(', ')+'). Sie werden jetzt gespeichert.');setTimeout(flush,300);}
+ if(lost.length)toast('Einige nicht gespeicherte Eingaben ('+lost.map(secName).join(', ')+') wurden verworfen, weil inzwischen jemand anderes diesen Bereich geändert hat.');
+ saveCache();
  setSync('ok',syncLabel());
  var pkey=meTag()+'#'+rid();
  C.chan=C.client.channel('konvoi-'+k.id,{config:{presence:{key:pkey}}})
@@ -529,9 +540,9 @@ async function route2(locs){
 
 /* ---------- Karten ---------- */
 var tileCache={};
-function tsrc(){return TS[P.tiles]||TS.carto;}
+function tsrc(){return TS[P.tiles]||TS.osm;}
 function loadTile(z,x,y){
- var src=tsrc(),k=z+'/'+x+'/'+y,ck=P.tiles+'|'+k;if(tileCache[ck])return tileCache[ck];
+ var src=tsrc(),k=z+'/'+x+'/'+y,ck=(TS[P.tiles]?P.tiles:'osm')+'|'+k;if(tileCache[ck])return tileCache[ck];
  tileCache[ck]=new Promise(function(res){
   var i=0;
   (function next(){
@@ -545,7 +556,7 @@ function loadTile(z,x,y){
  });
  return tileCache[ck];
 }
-function routeSig(){var R=S.route;return (P.tiles||'carto')+'|'+(R?R.pts.length+':'+R.cum[R.cum.length-1]:'0');}
+function routeSig(){var R=S.route;return (TS[P.tiles]?P.tiles:'osm')+'|'+(R?R.pts.length+':'+R.cum[R.cum.length-1]:'0');}
 async function renderMap(job){
  var v=job.view,w=v.w,h=v.h,cv=document.createElement('canvas');cv.width=w;cv.height=h;var g=cv.getContext('2d');
  g.fillStyle='#e8ece9';g.fillRect(0,0,w,h);
@@ -909,7 +920,7 @@ var FIELDS=['name','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bu
 FIELDS.forEach(function(k){var el=$(k);el.addEventListener('input',function(){S[k]=el.type==='number'&&el.value!==''?num(el.value):el.value;touch('konvoi');if(k==='pkw'||k==='lkw'||k==='bus'){drawFz();touch('fahrzeuge');}renderRoadbookSoon();});});
 var TF=[['tw','weight'],['th','height'],['tb','width'],['tl','length']];
 TF.forEach(function(m){var el=$(m[0]);el.addEventListener('input',function(){S.truck[m[1]]=el.value===''?'':num(el.value);touch('konvoi');});});
-function fillFields(force){var a=force?null:document.activeElement;FIELDS.forEach(function(k){if($(k)!==a)$(k).value=S[k]==null?'':S[k];});TF.forEach(function(m){if($(m[0])!==a)$(m[0]).value=S.truck[m[1]]==null?'':S.truck[m[1]];});$('tiles').value=TS[P.tiles]?P.tiles:'carto';}
+function fillFields(force){var a=force?null:document.activeElement;FIELDS.forEach(function(k){if($(k)!==a)$(k).value=S[k]==null?'':S[k];});TF.forEach(function(m){if($(m[0])!==a)$(m[0]).value=S.truck[m[1]]==null?'':S.truck[m[1]];});$('tiles').value=TS[P.tiles]?P.tiles:'osm';}
 $('tiles').addEventListener('change',function(){P.tiles=this.value;savePrefs();mapsFailed=false;ensureMaps();});
 $('btnMaps').addEventListener('click',function(){M={};tileCache={};mapsFailed=false;try{localStorage.removeItem(mapStoreKey());}catch(e){}ensureMaps();});
 
