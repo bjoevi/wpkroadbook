@@ -106,6 +106,10 @@ th{font-size:12px;color:var(--mute);font-weight:600}
 .ladeplan .pp:focus{outline:none}.ladeplan .pp:focus rect.cell,.ladeplan .pp.sel rect.cell{stroke:var(--accent);stroke-width:4}
 .ladeplan text{fill:var(--ink);font-family:var(--f-body)}
 .palx{border:1px solid var(--line);border-radius:6px;padding:10px;margin-top:10px}
+.tktab{min-width:1180px}.tktab td{padding:4px}.tktab input,.tktab select{padding:6px;font-size:14px}
+.tktab input[type=date]{min-width:140px}.tktab select[data-rf=was]{min-width:110px}.tktab select[data-rf=waeh]{min-width:82px}.tktab select[data-rf=bez]{min-width:120px}.tktab input[data-rf=ort],.tktab input[data-rf=firma]{min-width:120px}
+.tkhead{display:grid;gap:4px 16px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:var(--soft);border-radius:6px;padding:10px;margin:8px 0}
+.tkhead b{display:block}
 .abg .src{display:grid;gap:10px;grid-template-columns:2fr 1fr;max-width:420px;margin-bottom:8px}
 .line3{display:grid;gap:10px;grid-template-columns:2fr 1fr auto;align-items:end;margin-bottom:8px}
 @media (max-width:520px){.line3{grid-template-columns:1fr}}
@@ -151,6 +155,7 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <button class="tab" role="tab" id="tab-planung" data-tab="planung" aria-selected="true">Planung</button>
 <button class="tab" role="tab" id="tab-roadbook" data-tab="roadbook" aria-selected="false">Roadbook</button>
 <button class="tab" role="tab" id="tab-paeckchen" data-tab="paeckchen" aria-selected="false">Päckchen zählen</button>
+<button class="tab" role="tab" id="tab-tanken" data-tab="tanken" aria-selected="false">Tankprotokoll</button>
 </div>
 <div id="toasts"></div>
 <p id="rolehint" class="info" hidden>Du hast Lesezugriff. Die Planung ändert die Konvoileitung; Päckchen-Abgaben kannst du erfassen.</p>
@@ -223,11 +228,17 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <div class="g">
 <label class="chk"><input type="checkbox" id="pdfEt" checked>Etappen-Seiten mit Karten</label>
 <label class="chk"><input type="checkbox" id="pdfInfo" checked>Infoseiten</label>
-<label class="chk"><input type="checkbox" id="pdfTank" checked>Tankprotokoll je Fahrzeug</label>
+<label class="chk"><input type="checkbox" id="pdfTank" checked>Tankprotokoll (Fahrzeuge mit Einträgen)</label>
 <label class="chk"><input type="checkbox" id="pdfNotes" checked>Notizseite</label>
 </div>
 <div class="row"><button type="button" class="primary" id="btnPdf">Roadbook als PDF exportieren</button></div>
 <p id="pdfmsg" class="small" aria-live="polite"></p></div>
+</section>
+
+<section id="v-tanken" hidden>
+<div class="panel"><h2>Tankprotokoll</h2>
+<p class="small" style="margin-top:-4px">Für jedes Fahrzeug eigene Einträge. Tour, Fahrzeug und Kennzeichen kommen aus der Planung. Im PDF erscheint das Tankprotokoll eines Fahrzeugs erst, wenn dafür etwas eingetragen ist.</p>
+<div id="tank"></div></div>
 </section>
 
 <section id="v-paeckchen" hidden>
@@ -275,7 +286,7 @@ function D0(){return{name:'',date:'',time:'',speed:'',maxh:'',dwell:'',fahrer:''
  truck:{weight:'',height:'',width:'',length:''},
  start:{name:'',lat:null,lon:null},vias:[],ziel:{name:'',lat:null,lon:null},
  legKm:[0],route:null,teamRoutes:{},fz:{pkw:[],lkw:[],bus:[]},teams:[],kontakte:[{rolle:'',name:'',tel:''}],
- infos:[],bestand:{},abgaben:[]};}
+ infos:[],bestand:{},abgaben:[],tank:{}};}
 var DEF={speed:70,maxh:4,dwell:30,time:'06:00'};
 function dwellDef(){return S.dwell===''||S.dwell==null?DEF.dwell:num(S.dwell);}
 var SECT={konvoi:['name','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus','truck','kontakte','infos'],strecke:['start','vias','ziel','legKm'],route:['route','teamRoutes'],fahrzeuge:['fz','teams'],bestand:['bestand','paletten']};
@@ -288,7 +299,7 @@ function clone(o){return o==null?o:JSON.parse(JSON.stringify(o));}
 function normalize(){
  if(!S.vias)S.vias=[];if(!S.abgaben)S.abgaben=[];if(!S.bestand)S.bestand={};if(!S.teams)S.teams=[];if(!S.teamRoutes)S.teamRoutes={};
  if(!S.kontakte||!S.kontakte.length)S.kontakte=[{rolle:'',name:'',tel:''}];
- if(!S.infos)S.infos=[];if(!S.paletten||typeof S.paletten!=='object')S.paletten={};if(!S.fz)S.fz={pkw:[],lkw:[],bus:[]};if(!S.legKm)S.legKm=[0];
+ if(!S.infos)S.infos=[];if(!S.paletten||typeof S.paletten!=='object')S.paletten={};if(!S.tank||typeof S.tank!=='object')S.tank={};if(!S.fz)S.fz={pkw:[],lkw:[],bus:[]};if(!S.legKm)S.legKm=[0];
  S.vias.forEach(function(v){if(!v.type)v.type=v.wechsel?'pause':'halt';if(v.id==null)v.id=rid();v.id=String(v.id);});
  S.abgaben.forEach(function(a){a.id=String(a.id);if(!a.pk)a.pk={};});
  S.infos.forEach(function(x){if(!x.id)x.id=rid();});
@@ -308,12 +319,13 @@ var CFG=window.ROADBOOK_CONFIG||{};
 var SHARED=!!(CFG.planerEmail||CFG.teamEmail),MYNAME='';try{MYNAME=localStorage.getItem('roadbook-name')||'';}catch(e){}
 var C={on:false,client:null,user:null,role:'planer',konvoi:null,ver:{},dirty:{},timer:null,chan:null,state:'',lastSave:null,members:{}};
 function saveLocal(){if(C.konvoi)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
-function canEdit(sec){return !C.on||C.role==='planer'||/^abgabe:/.test(sec);}
+function canEdit(sec){return !C.on||C.role==='planer'||/^(abgabe|tank):/.test(sec);}
 function cacheKey(){return 'roadbook-cache-'+(C.konvoi?C.konvoi.id:'');}
 function saveCache(){if(!C.konvoi)return;var d={ver:C.ver,dirty:{}};Object.keys(C.dirty).forEach(function(sec){d.dirty[sec]=pack(sec);});try{if(Object.keys(d.dirty).length)localStorage.setItem(cacheKey(),JSON.stringify(d));else localStorage.removeItem(cacheKey());}catch(e){}}
 function touch(){var secs=[].slice.call(arguments);saveLocal();if(!C.konvoi)return;secs.forEach(function(s){if(canEdit(s))C.dirty[s]=1;});saveCache();clearTimeout(C.timer);C.timer=setTimeout(flush,900);setSync('busy','Ungespeicherte Änderungen');}
-function pack(sec){if(/^abgabe:/.test(sec)){var id=sec.slice(7);return clone(S.abgaben.find(function(a){return a.id===id;})||null);}var o={};SECT[sec].forEach(function(k){o[k]=S[k];});return clone(o);}
+function pack(sec){if(/^tank:/.test(sec)){var tk=S.tank[sec.slice(5)];return tk?clone(tk):null;}if(/^abgabe:/.test(sec)){var id=sec.slice(7);return clone(S.abgaben.find(function(a){return a.id===id;})||null);}var o={};SECT[sec].forEach(function(k){o[k]=S[k];});return clone(o);}
 function unpack(sec,obj){
+ if(/^tank:/.test(sec)){var vk=sec.slice(5);if(obj)S.tank[vk]=obj;else delete S.tank[vk];return;}
  if(/^abgabe:/.test(sec)){var id=sec.slice(7),i=S.abgaben.findIndex(function(a){return a.id===id;});if(!obj){if(i>=0)S.abgaben.splice(i,1);return;}obj.id=id;if(i>=0)S.abgaben[i]=obj;else S.abgaben.push(obj);normalize();return;}
  if(!SECT[sec]||!obj)return;SECT[sec].forEach(function(k){if(k in obj)S[k]=obj[k];});normalize();
 }
@@ -349,7 +361,7 @@ async function flush(){
   saveCache();C.errShown=false;C.lastSave=new Date();setSync('ok',syncLabel()+' · gespeichert '+tfmt.format(C.lastSave));
  }finally{flushing=false;}
 }
-function secName(sec){return {konvoi:'Konvoi und Infos',strecke:'Strecke',route:'Route',fahrzeuge:'Fahrzeuge und Teams',bestand:'Ladeliste'}[sec]||'Abgabe';}
+function secName(sec){return {konvoi:'Konvoi und Infos',strecke:'Strecke',route:'Route',fahrzeuge:'Fahrzeuge und Teams',bestand:'Ladeliste'}[sec]||(/^tank:/.test(sec)?'Tankprotokoll':'Abgabe');}
 function toast(t){var n=document.createElement('div');n.className='note';n.setAttribute('role','status');n.textContent=t;$('toasts').appendChild(n);setTimeout(function(){n.remove();},10000);}
 async function reloadSection(sec){forceFill=true;
  var r=await C.client.from('daten').select('bereich,inhalt,version').eq('konvoi_id',C.konvoi.id).eq('bereich',sec);
@@ -378,6 +390,7 @@ function rerender(sec){
   else if(sec==='fahrzeuge'){drawTeams();}
   else if(sec==='bestand'){drawBest();drawLadeplan();}
   else if(/^abgabe:/.test(sec)){drawAbg();drawLadeplan();}
+  else if(/^tank:/.test(sec)){drawTank();}
   else if(sec==='fahrzeuge'||sec==='konvoi'){drawLadeplan();}
   renderRoadbook();calcPk();
  });
@@ -1049,36 +1062,44 @@ async function buildPdf(opt){
  if(opt.info){var inf=S.infos.filter(function(x){return x.titel||x.text;});
   if(inf.length){np();eyebrow('Infos');
    inf.forEach(function(x){if(x.titel)head(x.titel);String(x.text||'').split(/\r?\n/).forEach(function(l){var t=l.trim();if(!t){y-=4;return;}if(/^[-•*]\s+/.test(t))para('•  '+t.replace(/^[-•*]\s+/,''),10,false,ink,1,6);else para(t,10,false,ink,2);});y-=6;});}}
- /* Tankprotokoll: ursprüngliche Tabelle, Zellen als Formularfelder */
- if(opt.tank){
+ /* Tankprotokoll: ursprüngliche Tabelle, Zellen als Formularfelder, vorbefüllt aus der Eingabemaske */
+ var tveh=fr.filter(function(x){return tankHas(tankOf(vehKey(x)));});
+ if(opt.tank&&tveh.length){
   var form=doc.getForm(),noFill={borderWidth:0,font:F};
-  var veh=fr.length?fr:[{lab:'',o:{}},{lab:'',o:{}}];
   var WAS=['D','B','A','M','S'],WAEH=['EUR','HUF','RON','RSD','CZK','PLN','MDL'],PAY=['Tankpool','DKV','bar','Org','Privat'];
-  var cols=[['Datum',44,'t'],['Tankgesellschaft',62,'t'],['Land',24,'t'],['Ort',62,'t'],['km-Stand',46,'t'],['Was',22,'d',WAS],['Menge',36,'t'],['Währ.',28,'d',WAEH],['Betrag',44,'t'],['Tankpool',29,'r'],['DKV',29,'r'],['bar',29,'r'],['Org.',29,'r'],['Privat',31,'r']];
+  var cols=[['Datum',44,'t','datum'],['Tankgesellschaft',62,'t','firma'],['Land',24,'t','land'],['Ort',62,'t','ort'],['km-Stand',46,'t','km'],['Was',22,'d','was',WAS],['Menge',36,'t','menge'],['Währ.',28,'d','waeh',WAEH],['Betrag',44,'t','betrag'],['Tankpool',29,'r'],['DKV',29,'r'],['bar',29,'r'],['Org.',29,'r'],['Privat',31,'r']];
   var tot=cols.reduce(function(a,c){return a+c[1];},0),sc=CW/tot;cols.forEach(function(c){c[1]=c[1]*sc;});
-  var tfield=function(name,x,yy,w,h,size){var f=form.createTextField(name);f.addToPage(page,Object.assign({x:x,y:yy,width:w,height:h},noFill));f.setFontSize(size||7);return f;};
-  for(var vi=0;vi<veh.length;vi++){
-   if(vi%2===0){np();eyebrow('Tankprotokoll');}
-   var v=veh[vi],rowsN=13,rh=17,hh=26,pre='tank'+(vi+1)+'_';
-   tx('Tour: '+(S.name||'–'),MG,y-10,9,true);tx('Fahrzeug: '+(v.o.ruf||v.lab||'–'),MG+170,y-10,9,true);tx('Kennzeichen: '+(v.o.kz||'–'),MG+300,y-10,9,true);
-   y-=16;
-   tx('km Übernahme:',MG,y-10,9,false);var kx1=MG+F.widthOfTextAtSize('km Übernahme:',9)+4;page.drawLine({start:{x:kx1,y:y-12},end:{x:kx1+70,y:y-12},thickness:0.5,color:mute});tfield(pre+'km_uebernahme',kx1,y-12,70,12,9);
-   tx('km Abgabe:',MG+170,y-10,9,false);var kx2=MG+170+F.widthOfTextAtSize('km Abgabe:',9)+4;page.drawLine({start:{x:kx2,y:y-12},end:{x:kx2+70,y:y-12},thickness:0.5,color:mute});tfield(pre+'km_abgabe',kx2,y-12,70,12,9);
-   tx('Bezahlt mit',MG+CW-cols.slice(-5).reduce(function(a,c){return a+c[1];},0),y-10,8,true,mute);y-=16;
-   var x=MG;page.drawRectangle({x:MG,y:y-hh,width:CW,height:hh,color:soft});
-   cols.forEach(function(c){wrap(c[0],c[1]-3,7,B).forEach(function(l,li){tx(l,x+2,y-9-li*8,7,true,mute);});x+=c[1];});
-   var gy=y-hh-rowsN*rh;
-   for(var ri=0;ri<=rowsN+1;ri++){var yy=ri===0?y:y-hh-(ri-1)*rh;page.drawLine({start:{x:MG,y:yy},end:{x:MG+CW,y:yy},thickness:ri<=1?0.8:0.4,color:ri<=1?mute:lineC});}
-   x=MG;for(var ci=0;ci<=cols.length;ci++){page.drawLine({start:{x:x,y:y},end:{x:x,y:gy},thickness:0.4,color:lineC});if(ci<cols.length)x+=cols[ci][1];}
-   for(var rr=1;rr<=rowsN;rr++){
-    var bottom=y-hh-rr*rh,rg=null;x=MG;
-    for(var cc=0;cc<cols.length;cc++){var c=cols[cc],nm=pre+'z'+rr+'_'+c[0].replace(/[^A-Za-z]/g,'');
-     if(c[2]==='t')tfield(nm,x+1,bottom+1,c[1]-2,rh-2,7);
-     else if(c[2]==='d'){var dd=form.createDropdown(nm);dd.addOptions(c[3]);dd.addToPage(page,Object.assign({x:x+1,y:bottom+1,width:c[1]-2,height:rh-2},noFill));dd.setFontSize(7);}
-     else{if(!rg)rg=form.createRadioGroup(pre+'z'+rr+'_bezahlt');var bw=8;rg.addOptionToPage(PAY[cc-9],page,{x:x+(c[1]-bw)/2,y:bottom+(rh-bw)/2,width:bw,height:bw,borderWidth:0.5,borderColor:lineC});}
-     x+=c[1];}
+  var tfield=function(name,x,yy,w,h,size,val){var f=form.createTextField(name);if(val!=null&&val!=='')f.setText(wa(val));f.addToPage(page,Object.assign({x:x,y:yy,width:w,height:h},noFill));f.setFontSize(size||7);return f;};
+  var fmtD=function(d){var m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'.'+m[2]+'.'+m[1].slice(2):(d||'');};
+  var fmtN=function(v,dec){if(v===''||v==null)return '';var n=num(v);return dec?n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}):String(v).replace('.',',');};
+  var rh=17,hh=26,MAXR=34,firstT=true;
+  for(var vi=0;vi<tveh.length;vi++){
+   var v=tveh[vi],tk=tankOf(vehKey(v)),allRows=tk.rows||[],chunks=[];
+   for(var ci0=0;ci0<Math.max(1,Math.ceil(allRows.length/MAXR));ci0++)chunks.push(allRows.slice(ci0*MAXR,(ci0+1)*MAXR));
+   for(var ch=0;ch<chunks.length;ch++){
+    var rows=chunks[ch],rowsN=Math.max(13,rows.length),pre='tank_'+vehKey(v)+'_'+(ch+1)+'_',tableH=32+hh+rowsN*rh+36;
+    if(firstT||y-tableH<MG+24){np();eyebrow('Tankprotokoll');firstT=false;}
+    tx('Tour: '+(S.name||'–'),MG,y-10,9,true);tx('Fahrzeug: '+(v.o.ruf||v.lab||'–')+(ch?' (Fortsetzung)':''),MG+170,y-10,9,true);tx('Kennzeichen: '+(v.o.kz||'–'),MG+300,y-10,9,true);
+    y-=16;
+    tx('km Übernahme:',MG,y-10,9,false);var kx1=MG+F.widthOfTextAtSize('km Übernahme:',9)+4;page.drawLine({start:{x:kx1,y:y-12},end:{x:kx1+70,y:y-12},thickness:0.5,color:mute});tfield(pre+'km_uebernahme',kx1,y-12,70,12,9,ch?'':tk.kmA);
+    tx('km Abgabe:',MG+170,y-10,9,false);var kx2=MG+170+F.widthOfTextAtSize('km Abgabe:',9)+4;page.drawLine({start:{x:kx2,y:y-12},end:{x:kx2+70,y:y-12},thickness:0.5,color:mute});tfield(pre+'km_abgabe',kx2,y-12,70,12,9,ch?'':tk.kmE);
+    tx('Bezahlt mit',MG+CW-cols.slice(-5).reduce(function(a,c){return a+c[1];},0),y-10,8,true,mute);y-=16;
+    var x=MG;page.drawRectangle({x:MG,y:y-hh,width:CW,height:hh,color:soft});
+    cols.forEach(function(c){wrap(c[0],c[1]-3,7,B).forEach(function(l,li){tx(l,x+2,y-9-li*8,7,true,mute);});x+=c[1];});
+    var gy=y-hh-rowsN*rh;
+    for(var ri=0;ri<=rowsN+1;ri++){var yy=ri===0?y:y-hh-(ri-1)*rh;page.drawLine({start:{x:MG,y:yy},end:{x:MG+CW,y:yy},thickness:ri<=1?0.8:0.4,color:ri<=1?mute:lineC});}
+    x=MG;for(var cj=0;cj<=cols.length;cj++){page.drawLine({start:{x:x,y:y},end:{x:x,y:gy},thickness:0.4,color:lineC});if(cj<cols.length)x+=cols[cj][1];}
+    for(var rr=1;rr<=rowsN;rr++){
+     var bottom=y-hh-rr*rh,rg=null,rd=rows[rr-1]||{};x=MG;
+     for(var cc=0;cc<cols.length;cc++){var c=cols[cc],nm=pre+'z'+rr+'_'+c[0].replace(/[^A-Za-z]/g,''),val=c[3]?rd[c[3]]:null;
+      if(c[3]==='datum')val=fmtD(val);else if(c[3]==='betrag')val=fmtN(val,true);else if(c[3]==='menge'||c[3]==='km')val=fmtN(val,false);
+      if(c[2]==='t')tfield(nm,x+1,bottom+1,c[1]-2,rh-2,7,val);
+      else if(c[2]==='d'){var dd=form.createDropdown(nm);dd.addOptions(c[4]);if(val&&c[4].indexOf(val)>=0)dd.select(val);dd.addToPage(page,Object.assign({x:x+1,y:bottom+1,width:c[1]-2,height:rh-2},noFill));dd.setFontSize(7);}
+      else{if(!rg)rg=form.createRadioGroup(pre+'z'+rr+'_bezahlt');var bw=8;rg.addOptionToPage(PAY[cc-9],page,{x:x+(c[1]-bw)/2,y:bottom+(rh-bw)/2,width:bw,height:bw,borderWidth:0.5,borderColor:lineC});if(cc===cols.length-1&&rd.bez&&PAY.indexOf(rd.bez)>=0)rg.select(rd.bez);}
+      x+=c[1];}
+    }
+    y=gy-10;tx('Land: D, A, HU, RO, BG, PL …   Was: D Diesel, B Benzin, A AdBlue, M Maut, S Sonstiges   Währung: EUR, HUF, RON, RSD, CZK, PLN',MG,y,7,false,mute);y-=26;
    }
-   y=gy-10;tx('Land: D, A, HU, RO, BG, PL …   Was: D Diesel, B Benzin, A AdBlue, M Maut, S Sonstiges   Währung: EUR, HUF, RON, RSD, CZK, PLN',MG,y,7,false,mute);y-=26;
   }
   form.updateFieldAppearances(F);
  }
@@ -1249,6 +1270,46 @@ function calcPk(){
  $('rest').innerHTML=h+'</table></div>';
 }
 
+/* ---------- Tankprotokoll ---------- */
+var TKWAS=[['D','Diesel'],['B','Benzin'],['A','AdBlue'],['M','Maut'],['S','Sonstiges']],TKWAEH=['EUR','HUF','RON','RSD','CZK','PLN','MDL'],TKPAY=[['Tankpool','Tankpool'],['DKV','DKV'],['bar','bar'],['Org','Org.-Karte'],['Privat','Privat']];
+var tkSel='';
+function vehKey(x){return x.t+x.i;}
+function tankOf(k){return S.tank[k]||null;}
+function tankHas(t){return !!(t&&(t.kmA||t.kmE||(t.rows&&t.rows.length)));}
+function opts(list,cur,empty){return (empty!=null?'<option value="">'+empty+'</option>':'')+list.map(function(o){var v=Array.isArray(o)?o[0]:o,l=Array.isArray(o)?o[1]:o;return '<option value="'+esc(v)+'"'+(cur===v?' selected':'')+'>'+esc(l)+'</option>';}).join('');}
+function tankSum(t){var cur={},lit=0;(t&&t.rows||[]).forEach(function(r){if(num(r.betrag))cur[r.waeh||'EUR']=(cur[r.waeh||'EUR']||0)+num(r.betrag);if(r.was==='D'||r.was==='B')lit+=num(r.menge);});
+ var km=t&&num(t.kmE)&&num(t.kmA)?num(t.kmE)-num(t.kmA):0;
+ return '<div><b>'+((t&&t.rows||[]).length)+'</b><span>Einträge</span></div><div><b>'+(Math.round(lit*10)/10).toLocaleString('de-DE')+' l</b><span>Diesel und Benzin</span></div>'
+  +(Object.keys(cur).length?Object.keys(cur).map(function(c){return '<div><b>'+cur[c].toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+esc(c)+'</b><span>Summe</span></div>';}).join(''):'<div><b>0,00</b><span>Summe</span></div>')
+  +(km?'<div><b>'+km.toLocaleString('de-DE')+' km</b><span>gefahren</span></div>':'');}
+function drawTank(){
+ var host=$('tank');if(!host)return;var V=fzRows();
+ if(!V.length){host.innerHTML='<p class="mute">Unter „Planung“ die Anzahl der Fahrzeuge eintragen. Dann erscheint hier für jedes Fahrzeug ein Tankprotokoll.</p>';return;}
+ if(!V.some(function(x){return vehKey(x)===tkSel;}))tkSel=vehKey(V[0]);
+ var v=V.find(function(x){return vehKey(x)===tkSel;}),t=tankOf(tkSel)||{kmA:'',kmE:'',rows:[]},tm=v.o.team?teamById(v.o.team):null;
+ var h='<div class="lkwsel" role="group" aria-label="Fahrzeug wählen">'+V.map(function(x){var k=vehKey(x),n=(tankOf(k)&&tankOf(k).rows||[]).length;return '<button type="button" data-veh="'+k+'" aria-pressed="'+(k===tkSel)+'">'+esc(x.o.ruf||x.lab)+(x.o.kz?' · '+esc(x.o.kz):'')+(n?' ('+n+')':'')+'</button>';}).join('')+'</div>';
+ h+='<div class="tkhead"><div><span class="tag">Tour</span><b>'+esc(S.name||'–')+'</b></div><div><span class="tag">Fahrzeug</span><b>'+esc(v.o.ruf||v.lab)+(tm&&tm.name?' · '+esc(tm.name):'')+'</b></div><div><span class="tag">Kennzeichen</span><b>'+esc(v.o.kz||'–')+'</b></div></div>';
+ h+='<div class="g" style="max-width:420px"><div><label for="tk-kmA">km Übernahme</label><input id="tk-kmA" type="number" min="0" inputmode="numeric" data-tf="kmA" value="'+esc(t.kmA||'')+'"></div><div><label for="tk-kmE">km Abgabe</label><input id="tk-kmE" type="number" min="0" inputmode="numeric" data-tf="kmE" value="'+esc(t.kmE||'')+'"></div></div>';
+ h+='<div class="sum" id="tksum" style="margin-top:10px">'+tankSum(t)+'</div>';
+ h+=(t.rows&&t.rows.length?'<div class="scroll"><table class="tktab"><thead><tr><th>Datum</th><th>Tankgesellschaft</th><th>Land</th><th>Ort</th><th>km-Stand</th><th>Was</th><th>Menge</th><th>Währung</th><th>Betrag</th><th>Bezahlt mit</th><th></th></tr></thead><tbody>'
+  +t.rows.map(function(r){var b='tk-'+r.id+'-';return '<tr data-row="'+r.id+'"><td><input type="date" id="'+b+'datum" data-rf="datum" value="'+esc(r.datum||'')+'" aria-label="Datum"></td><td><input id="'+b+'firma" data-rf="firma" value="'+esc(r.firma||'')+'" aria-label="Tankgesellschaft"></td><td><input id="'+b+'land" data-rf="land" class="kz" maxlength="3" style="width:54px" value="'+esc(r.land||'')+'" aria-label="Land"></td><td><input id="'+b+'ort" data-rf="ort" value="'+esc(r.ort||'')+'" aria-label="Ort"></td><td><input type="number" min="0" inputmode="numeric" id="'+b+'km" data-rf="km" style="width:96px" value="'+esc(r.km||'')+'" aria-label="km-Stand"></td><td><select id="'+b+'was" data-rf="was" aria-label="Was">'+opts(TKWAS,r.was||'','–')+'</select></td><td><input type="number" min="0" step="any" inputmode="decimal" id="'+b+'menge" data-rf="menge" style="width:80px" value="'+esc(r.menge||'')+'" aria-label="Menge"></td><td><select id="'+b+'waeh" data-rf="waeh" aria-label="Währung">'+opts(TKWAEH,r.waeh||'EUR')+'</select></td><td><input type="number" min="0" step="0.01" inputmode="decimal" id="'+b+'betrag" data-rf="betrag" style="width:96px" value="'+esc(r.betrag||'')+'" aria-label="Betrag"></td><td><select id="'+b+'bez" data-rf="bez" aria-label="Bezahlt mit">'+opts(TKPAY,r.bez||'','–')+'</select></td><td><button type="button" class="mini" data-tkdel="'+r.id+'" aria-label="Eintrag löschen">Löschen</button></td></tr>';}).join('')+'</tbody></table></div>':'<p class="mute">Noch kein Tankeintrag für dieses Fahrzeug.</p>');
+ h+='<div class="row"><button type="button" class="primary" id="tkadd">Tankeintrag hinzufügen</button></div>';
+ host.innerHTML=h;
+}
+function tankEnsure(){var t=S.tank[tkSel];if(!t)t=S.tank[tkSel]={kmA:'',kmE:'',rows:[]};if(!t.rows)t.rows=[];return t;}
+function tankTouch(){var t=S.tank[tkSel];if(t&&!tankHas(t))delete S.tank[tkSel];touch('tank:'+tkSel);var su=$('tksum');if(su)su.innerHTML=tankSum(S.tank[tkSel]);}
+$('tank').addEventListener('click',function(e){var t=e.target;
+ if(t.dataset.veh){tkSel=t.dataset.veh;drawTank();return;}
+ if(t.id==='tkadd'){var tk=tankEnsure(),last=tk.rows[tk.rows.length-1],r={id:rid(),datum:new Date().toISOString().slice(0,10),firma:'',land:last?last.land:'',ort:'',km:'',was:'D',menge:'',waeh:last?last.waeh:'EUR',betrag:'',bez:last?last.bez:'',von:C.user?meTag():''};tk.rows.push(r);tankTouch();drawTank();var f=$('tk-'+r.id+'-firma');if(f)f.focus();return;}
+ if(t.dataset.tkdel){var tk2=tankEnsure();tk2.rows=tk2.rows.filter(function(r){return r.id!==t.dataset.tkdel;});tankTouch();drawTank();}
+});
+function tankInput(e){var t=e.target,tk;
+ if(t.dataset.tf){tk=tankEnsure();tk[t.dataset.tf]=t.value;tankTouch();return;}
+ var tr=t.closest('tr[data-row]');if(!tr||!t.dataset.rf)return;tk=tankEnsure();var r=tk.rows.find(function(x){return x.id===tr.dataset.row;});if(!r)return;
+ r[t.dataset.rf]=t.dataset.rf==='land'?t.value.toUpperCase():t.value;tankTouch();}
+$('tank').addEventListener('input',function(e){if(e.target.tagName!=='SELECT')tankInput(e);});
+$('tank').addEventListener('change',function(e){if(e.target.tagName==='SELECT')tankInput(e);});
+
 /* ---------- Sichern ---------- */
 $('btnCopy').addEventListener('click',function(){
  var txt=JSON.stringify({roadbook:S,maps:M}),ta=$('bak');ta.value=txt;
@@ -1259,22 +1320,22 @@ $('btnLoad').addEventListener('click',function(){
  if(C.on&&C.role!=='planer'){$('bmsg').textContent='Nur die Planung kann Daten laden.';return;}
  try{var d=JSON.parse($('bak').value),rb=d&&d.roadbook?d.roadbook:d;if(!rb||typeof rb!=='object'||!rb.start)throw 0;
   var old=S.abgaben.map(function(a){return a.id;});mergeInto(rb);if(d.maps&&typeof d.maps==='object')M=Object.assign(M,d.maps);initAll();
-  touch('konvoi','strecke','route','fahrzeuge','bestand');S.abgaben.forEach(function(a){touch('abgabe:'+a.id);});old.forEach(function(id){if(!S.abgaben.some(function(a){return a.id===id;}))touch('abgabe:'+id);});
+  touch('konvoi','strecke','route','fahrzeuge','bestand');Object.keys(S.tank).forEach(function(k){touch('tank:'+k);});S.abgaben.forEach(function(a){touch('abgabe:'+a.id);});old.forEach(function(id){if(!S.abgaben.some(function(a){return a.id===id;}))touch('abgabe:'+id);});
   $('bmsg').textContent='Daten geladen.';}
  catch(e){$('bmsg').textContent='Das sind keine gültigen Roadbook-Daten.';}
 });
 
 /* ---------- Reiter ---------- */
-var TABS=['planung','roadbook','paeckchen'];
+var TABS=['planung','roadbook','paeckchen','tanken'];
 function setTab(n){
  if(TABS.indexOf(n)<0)n='planung';
  TABS.forEach(function(k){$('v-'+k).hidden=k!==n;$('tab-'+k).setAttribute('aria-selected',k===n?'true':'false');});
- if(n==='paeckchen'){drawAbg();drawLadeplan();}if(n==='roadbook')renderRoadbook();
+ if(n==='paeckchen'){drawAbg();drawLadeplan();}if(n==='tanken')drawTank();if(n==='roadbook')renderRoadbook();
 }
 document.querySelector('.tabs').addEventListener('click',function(e){var n=e.target.dataset.tab;if(!n)return;setTab(n);try{location.hash=n;}catch(x){}});
 window.addEventListener('hashchange',function(){if(/access_token|type=/.test(location.hash))return;setTab((location.hash||'').slice(1));});
 
-function initAll(){fillFields();drawK();drawInfos();drawTeams();drawStations();renderRoadbook();drawBest();drawAbg();calcPk();drawLadeplan();applyRole();}
+function initAll(){drawTank();fillFields();drawK();drawInfos();drawTeams();drawStations();renderRoadbook();drawBest();drawAbg();calcPk();drawLadeplan();applyRole();}
 if(LOGO){$('logo').src=LOGO;$('logo').hidden=false;}
 initAll();setTab((location.hash||'').slice(1));
 cloudInit();
