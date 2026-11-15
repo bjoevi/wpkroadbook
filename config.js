@@ -13,6 +13,6 @@
   Bleiben beide Werte leer, läuft das Roadbook ohne Anmeldung und speichert nur im eigenen Browser.
 */
 window.ROADBOOK_CONFIG = {
-  supabaseUrl: "",
-  supabaseAnonKey: ""
+  supabaseUrl: "https://zolbmagelelnkfelnmnk.supabase.co/rest/v1/",
+  supabaseAnonKey: "sb_publishable_NwcPxMALkpAPJHm1ULOeWg_JoUFhD1y"
 };
