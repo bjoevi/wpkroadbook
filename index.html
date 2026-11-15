@@ -130,8 +130,9 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <div class="panel"><h2>Anmelden</h2>
 <p class="small" style="margin-top:-4px">Zugang bekommst du von der Konvoileitung.</p>
 <form id="loginForm"><div style="display:grid;gap:10px">
-<div><label for="lmail">E-Mail</label><input id="lmail" type="email" autocomplete="username" required></div>
-<div><label for="lpass">Passwort</label><input id="lpass" type="password" autocomplete="current-password" required></div>
+<div id="lmailRow"><label for="lmail">E-Mail</label><input id="lmail" type="email" autocomplete="username"></div>
+<div><label for="lpass" id="lpassLab">Passwort</label><input id="lpass" type="password" autocomplete="current-password" required></div>
+<div id="lnameRow" hidden><label for="lname">Dein Name (wird anderen angezeigt)</label><input id="lname" autocomplete="name" placeholder="z. B. Anna"></div>
 </div><div class="row"><button type="submit" class="primary">Anmelden</button><button type="button" id="btnForgot">Passwort vergessen</button></div></form>
 <form id="newPassForm" hidden><div><label for="npass">Neues Passwort (mindestens 8 Zeichen)</label><input id="npass" type="password" autocomplete="new-password" minlength="8" required></div>
 <div class="row"><button type="submit" class="primary">Passwort speichern</button></div></form>
@@ -304,6 +305,7 @@ function savePrefs(){try{localStorage.setItem(PKEY,JSON.stringify(P));}catch(e){
 
 /* ---------- Gemeinsame Nutzung (Supabase) ---------- */
 var CFG=window.ROADBOOK_CONFIG||{};
+var SHARED=!!(CFG.planerEmail||CFG.teamEmail),MYNAME='';try{MYNAME=localStorage.getItem('roadbook-name')||'';}catch(e){}
 var C={on:false,client:null,user:null,role:'planer',konvoi:null,ver:{},dirty:{},timer:null,chan:null,state:'',lastSave:null,members:{}};
 function saveLocal(){if(C.konvoi)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function canEdit(sec){return !C.on||C.role==='planer'||/^abgabe:/.test(sec);}
@@ -314,7 +316,8 @@ function unpack(sec,obj){
  if(!SECT[sec]||!obj)return;SECT[sec].forEach(function(k){if(k in obj)S[k]=obj[k];});normalize();
 }
 function setSync(kind,text){var el=$('syncstate');if(!el)return;C.state=kind;el.innerHTML='<span class="dot '+(kind==='ok'?'on':kind==='busy'?'busy':kind==='off'?'off':'')+'"></span>'+esc(text);}
-function who(){return C.user?(C.members[String(C.user.email).toLowerCase()]||C.user.email):'';}
+function who(){if(!C.user)return '';var n=C.members[String(C.user.email).toLowerCase()]||C.user.email;return MYNAME?MYNAME+(SHARED?' ('+n+')':''):n;}
+function meTag(){return MYNAME||(C.user?C.user.email:'');}
 function syncLabel(){return (C.konvoi?C.konvoi.name+' · ':'')+who()+(C.role==='planer'?' (Planung)':' (Lesen)');}
 var flushing=false,forceFill=false;
 async function flush(){
@@ -379,7 +382,8 @@ function loadScript(src){return new Promise(function(res,rej){var s=document.cre
 function show(v){['v-auth','v-kwahl'].forEach(function(k){$(k).hidden=k!==v;});$('app').hidden=!!v;}
 async function cloudInit(){
  if(!CFG.supabaseUrl||!CFG.supabaseAnonKey)return;
- C.on=true;$('syncbar').hidden=false;setSync('busy','Verbinde …');show('v-auth');
+ C.on=true;$('syncbar').hidden=false;
+ if(SHARED){$('lmailRow').hidden=true;$('lnameRow').hidden=false;$('lname').value=MYNAME;$('lpassLab').textContent='Konvoi-Passwort';$('btnForgot').hidden=true;document.querySelector('#v-auth .small').textContent='Das Passwort bekommst du von der Konvoileitung. Es gibt ein Passwort für die Planung und eins für das Team.';}setSync('busy','Verbinde …');show('v-auth');
  var libs=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0','https://unpkg.com/@supabase/supabase-js@2.118.0/dist/umd/supabase.js','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
  for(var li=0;li<libs.length&&!(window.supabase&&window.supabase.createClient);li++){try{await loadScript(libs[li]);}catch(e){}}
  if(!(window.supabase&&window.supabase.createClient)){$('amsg').textContent='Die Verbindungsbibliothek ließ sich nicht laden. Internetverbindung prüfen und neu laden.';setSync('off','Keine Verbindung');return;}
@@ -396,7 +400,7 @@ async function afterLogin(user){
  var m=await C.client.from('mitglieder').select('email,name,rolle');
  var me=null;C.members={};
  if(!m.error&&m.data)m.data.forEach(function(x){C.members[String(x.email).toLowerCase()]=x.name||x.email;if(String(x.email).toLowerCase()===String(user.email).toLowerCase())me=x;});
- if(!me){$('amsg').textContent='Dein Konto ist angemeldet, aber nicht als Mitglied eingetragen. Bitte bei der Konvoileitung melden.';show('v-auth');setSync('off','Kein Mitglied');return;}
+ if(!me){$('amsg').textContent='Angemeldet als '+user.email+', aber diese Adresse fehlt in der Tabelle „mitglieder“. Bitte dort mit Rolle planer oder leser eintragen.';show('v-auth');setSync('off','Kein Mitglied');return;}
  C.role=me.rolle==='planer'?'planer':'leser';
  var want=null;try{want=new URLSearchParams(location.search).get('k')||localStorage.getItem('roadbook-konvoi');}catch(e){}
  await chooseKonvoi(want);
@@ -423,9 +427,10 @@ async function openKonvoi(k){
  M={};try{var mm=localStorage.getItem(MKEY+'-'+k.id);if(mm)M=JSON.parse(mm)||{};}catch(e){}
  show(null);initAll();
  setSync('ok',syncLabel());
- C.chan=C.client.channel('konvoi-'+k.id,{config:{presence:{key:C.user.email}}})
+ var pkey=meTag()+'#'+rid();
+ C.chan=C.client.channel('konvoi-'+k.id,{config:{presence:{key:pkey}}})
   .on('postgres_changes',{event:'*',schema:'public',table:'daten',filter:'konvoi_id=eq.'+k.id},remoteChange)
-  .on('presence',{event:'sync'},function(){if(!C.chan)return;var st=C.chan.presenceState(),n=Object.keys(st).filter(function(e){return e.toLowerCase()!==String(C.user.email).toLowerCase();}).map(function(e){return C.members[e.toLowerCase()]||e;});$('presence').textContent=n.length?'Auch da: '+n.join(', '):'';})
+  .on('presence',{event:'sync'},function(){if(!C.chan)return;var st=C.chan.presenceState(),n=Object.keys(st).filter(function(e){return e!==pkey;}).map(function(e){var b=e.split('#')[0];return C.members[b.toLowerCase()]||b;}).filter(function(v,i,a){return a.indexOf(v)===i;});$('presence').textContent=n.length?'Auch da: '+n.join(', '):'';})
   .subscribe(function(status){if(status==='SUBSCRIBED'){C.chan.track({at:Date.now()});}else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){setSync('off','Echtzeit getrennt – Seite neu laden');}});
  if(!hasKonvoi&&C.role==='planer')touch('konvoi');
 }
@@ -433,8 +438,17 @@ function leaveKonvoi(){if(C.chan&&C.client){try{C.client.removeChannel(C.chan);}
 function applyRole(){var ro=C.on&&C.role!=='planer';$('fsPlan').disabled=ro;$('fsBest').disabled=ro;$('rolehint').hidden=!ro;}
 $('loginForm').addEventListener('submit',async function(e){
  e.preventDefault();if(!C.client)return;$('amsg').textContent='Anmeldung …';
- var r=await C.client.auth.signInWithPassword({email:$('lmail').value.trim(),password:$('lpass').value});
- if(r.error){$('amsg').textContent='Anmeldung fehlgeschlagen: E-Mail oder Passwort stimmt nicht.';return;}
+ var pw=$('lpass').value,r=null,last=null;
+ if(SHARED){
+  MYNAME=$('lname').value.trim();try{localStorage.setItem('roadbook-name',MYNAME);}catch(x){}
+  var mails=[CFG.planerEmail,CFG.teamEmail].filter(Boolean);
+  for(var i=0;i<mails.length;i++){r=await C.client.auth.signInWithPassword({email:mails[i],password:pw});if(!r.error)break;last=r.error;}
+ }else{
+  var em=$('lmail').value.trim();if(!em){$('amsg').textContent='Bitte die E-Mail-Adresse eintragen.';return;}
+  r=await C.client.auth.signInWithPassword({email:em,password:pw});last=r.error;
+ }
+ if(!r||r.error){var m=String(last&&last.message||'');
+  $('amsg').textContent=/invalid login|invalid_credentials/i.test(m)?(SHARED?'Das Passwort stimmt nicht.':'E-Mail oder Passwort stimmt nicht.'):/not confirmed/i.test(m)?'Das Konto ist in Supabase noch nicht bestätigt. Unter Authentication → Users den Nutzer mit „Auto Confirm User“ anlegen.':/fetch|network/i.test(m)?'Keine Verbindung zur Datenbank. Adresse in config.js prüfen.':'Anmeldung fehlgeschlagen: '+m;return;}
  $('amsg').textContent='';$('lpass').value='';await afterLogin(r.data.user);
 });
 $('btnForgot').addEventListener('click',async function(){
@@ -1147,7 +1161,7 @@ $('abglist').addEventListener('input',function(e){var t=e.target,a=abgOf(t);if(!
  else if(f)a[f]=t.value;
  touch('abgabe:'+a.id);var w=t.closest('.abg').querySelector('.awarn');if(w)w.innerHTML=abgWarn(a);calcPk();drawPalView();});
 $('abglist').addEventListener('click',function(e){if(e.target.dataset.act!=='delabg')return;var a=abgOf(e.target);if(!a)return;S.abgaben=S.abgaben.filter(function(x){return x!==a;});touch('abgabe:'+a.id);drawAbg();calcPk();drawPalView();});
-$('addabg').addEventListener('click',function(){var a={id:rid(),ort:S.ziel.name||'',datum:new Date().toISOString().slice(0,10),pk:{},von:C.user?C.user.email:''};S.abgaben.push(a);touch('abgabe:'+a.id);drawAbg();calcPk();});
+$('addabg').addEventListener('click',function(){var a={id:rid(),ort:S.ziel.name||'',datum:new Date().toISOString().slice(0,10),pk:{},von:C.user?meTag():''};S.abgaben.push(a);touch('abgabe:'+a.id);drawAbg();calcPk();});
 /* ---------- Ladeplan ---------- */
 var PL=33,PR=3,selL='',selP=0;
 function lkwList(){return fzRows().filter(function(x){return x.t==='lkw';});}
@@ -1207,7 +1221,7 @@ $('ladeplan').addEventListener('click',function(e){
  var t=e.target,b=t.closest('[data-lkw]');if(b){selL=b.dataset.lkw;selP=0;drawLadeplan();return;}
  var g=t.closest('[data-platz]');if(g){selP=+g.dataset.platz;drawPalView();drawPalEditor();return;}
  if(t.dataset.act==='palclose'){selP=0;drawPalView();drawPalEditor();return;}
- if(t.dataset.act==='palabg'){var a={id:rid(),ort:S.ziel.name||'',datum:new Date().toISOString().slice(0,10),pk:{},von:C.user?C.user.email:'',lkw:selL,platz:selP};S.abgaben.push(a);touch('abgabe:'+a.id);drawAbg();calcPk();var el=document.querySelector('.abg[data-id="'+a.id+'"]');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});var f=el.querySelector('input[data-p]');if(f)f.focus({preventScroll:true});}}
+ if(t.dataset.act==='palabg'){var a={id:rid(),ort:S.ziel.name||'',datum:new Date().toISOString().slice(0,10),pk:{},von:C.user?meTag():'',lkw:selL,platz:selP};S.abgaben.push(a);touch('abgabe:'+a.id);drawAbg();calcPk();var el=document.querySelector('.abg[data-id="'+a.id+'"]');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});var f=el.querySelector('input[data-p]');if(f)f.focus({preventScroll:true});}}
 });
 $('ladeplan').addEventListener('keydown',function(e){var g=e.target.closest&&e.target.closest('[data-platz]');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selP=+g.dataset.platz;drawPalView();drawPalEditor();var n=document.querySelector('#palsvg [data-platz="'+selP+'"]');if(n)n.focus();}});
 $('ladeplan').addEventListener('input',function(e){var k=e.target.dataset.pal;if(!k||!selP||!palEditable())return;
