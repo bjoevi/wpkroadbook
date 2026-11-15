@@ -69,7 +69,7 @@ create policy "daten lesen" on public.daten for select to authenticated using (p
 
 -- 4. Speichern mit Versionsprüfung --------------------------------------------
 -- Verhindert, dass zwei Personen sich unbemerkt gegenseitig überschreiben.
--- Planer dürfen alle Bereiche speichern, Leser nur Päckchen-Abgaben (abgabe:...).
+-- Planer dürfen alle Bereiche speichern, Leser nur Päckchen-Abgaben (abgabe:...) und Tankprotokolle (tank:...).
 -- Ein leerer Inhalt (null) bedeutet "gelöscht".
 
 create or replace function public.speichern(p_konvoi uuid, p_bereich text, p_inhalt jsonb, p_version int)
@@ -78,7 +78,7 @@ declare
   v    int;
   mail text := lower(auth.jwt() ->> 'email');
 begin
-  if not (public.ist_planer() or (p_bereich like 'abgabe:%' and public.ist_mitglied())) then
+  if not (public.ist_planer() or ((p_bereich like 'abgabe:%' or p_bereich like 'tank:%') and public.ist_mitglied())) then
     raise exception 'keine_berechtigung';
   end if;
   if not exists (select 1 from public.konvois where id = p_konvoi) then
@@ -111,10 +111,14 @@ begin
   end if;
 end $$;
 
--- 6. Dich selbst als ersten Planer eintragen ----------------------------------
--- E-Mail und Namen anpassen! Dieselbe E-Mail-Adresse legst du danach unter
--- Authentication → Users → "Add user" mit Passwort an.
+-- 6. Zugänge eintragen ---------------------------------------------------------
+-- Variante A (empfohlen): Konvoi-Passwort mit zwei gemeinsamen Zugängen.
+--   Dieselben zwei E-Mail-Adressen legst du unter Authentication → Users → "Add user" an
+--   (jeweils mit eigenem Passwort, "Auto Confirm User" anhaken) und trägst sie in config.js
+--   bei planerEmail und teamEmail ein. Die Adressen müssen kein echtes Postfach haben.
+-- Variante B: Einzelne Konten je Person. Dann für jede Person eine Zeile mit ihrer E-Mail eintragen.
 
-insert into public.mitglieder (email, name, rolle)
-values ('deine.adresse@example.org', 'Dein Name', 'planer')
+insert into public.mitglieder (email, name, rolle) values
+  ('roadbook-planung@example.org', 'Planung', 'planer'),
+  ('roadbook-team@example.org',    'Team',    'leser1')
 on conflict (email) do update set name = excluded.name, rolle = excluded.rolle;
