@@ -1,0 +1,1261 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script src="config.js"></script>
+</head>
+<body>
+<title>Roadbook Weihnachtspäckchenkonvoi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+/* Layout: eine Spalte; Statusleiste für die gemeinsame Nutzung; Reiter Planung, Roadbook, Päckchen */
+:root{--bg:#f2f5f3;--surface:#ffffff;--ink:#13201a;--mute:#5d6e65;--line:#d6dfda;--accent:#1d5c45;--accent-ink:#ffffff;--soft:#e4eee8;--warn-bg:#fdf0d5;--warn-ink:#6b4300;--crit:#b3261e;--info-bg:#e3eef8;--info-ink:#173f63;--pal:#c99a52;--cab:#46576a;
+--f-head:"Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1511;--surface:#16201b;--ink:#e5ece8;--mute:#93a49b;--line:#2a3831;--accent:#62c79c;--accent-ink:#06120c;--soft:#1d2b24;--warn-bg:#3a2d10;--warn-ink:#f1c777;--crit:#ff8f86;--info-bg:#15283a;--info-ink:#a9cdf0;--pal:#c99a52;--cab:#7b8da1;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1511;--surface:#16201b;--ink:#e5ece8;--mute:#93a49b;--line:#2a3831;--accent:#62c79c;--accent-ink:#06120c;--soft:#1d2b24;--warn-bg:#3a2d10;--warn-ink:#f1c777;--crit:#ff8f86;--info-bg:#15283a;--info-ink:#a9cdf0;--pal:#c99a52;--cab:#7b8da1;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1000px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.top h1{min-width:0;overflow-wrap:anywhere}
+@media (max-width:520px){#logo{height:48px}}
+#logo{height:64px;width:auto;max-width:30%;object-fit:contain;flex:none}
+h1{font:700 22px/1.2 var(--f-head);margin:6px 0 10px;text-wrap:balance}
+h2{font:700 16px/1.3 var(--f-head);margin:0 0 10px}
+h3{font:700 14px/1.3 var(--f-head);margin:14px 0 6px}
+.mute{color:var(--mute)}.small,small{display:block;font-size:12px;color:var(--mute)}
+.bar{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:8px}
+.bar .sp{flex:1}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mute);margin-right:6px;vertical-align:1px}
+.dot.on{background:#2e9d62}.dot.busy{background:#d99a00}.dot.off{background:var(--crit)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:4px;overflow-x:auto}
+.tab{border:0;background:none;padding:10px 14px;font:600 14px var(--f-body);color:var(--mute);border-bottom:3px solid transparent;cursor:pointer;margin-bottom:-1px;border-radius:0;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;margin:12px 0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+input,select,textarea{width:100%;min-width:0;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px}
+input[type=color]{padding:2px;height:38px}
+input[type=checkbox]{width:auto;margin-right:6px}
+input.kz{text-transform:uppercase;font-variant-numeric:tabular-nums}
+input:disabled,select:disabled,textarea:disabled{opacity:.75}
+input:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.g{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.line{display:flex;gap:8px}.line input{flex:1}
+button{font:inherit;font-weight:500;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.mini{padding:4px 10px;font-size:13px}
+button:disabled{opacity:.55;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tag{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+.st{padding:14px 0;border-top:1px solid var(--line)}.st:first-child{border-top:0;padding-top:0}
+.st.pause .tag.lab{color:var(--warn-ink)}.st.hinweis .tag.lab{color:var(--info-ink)}
+.stl{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.stat{font-size:12px;color:var(--mute)}
+.res{display:grid;gap:4px;margin:6px 0}.hit{text-align:left;font-size:13px;padding:6px 10px}
+.hit small{display:inline;margin-left:6px}
+.ex{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));align-items:end;margin-top:8px}
+.two{display:grid;gap:12px;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:start}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+.map{position:relative;aspect-ratio:16/9;max-width:100%;background:var(--soft);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.map img{display:block;width:100%;height:100%;object-fit:cover}
+.map img.pick{cursor:crosshair}
+.map.loading img{opacity:.5}
+.mapmsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;font-size:12px;color:var(--mute)}
+.mapctl{position:absolute;top:6px;right:6px;display:flex;flex-direction:column;gap:4px}
+.mapctl button{width:32px;height:32px;padding:0;font-weight:700;background:#fff;color:#13201a;border-color:#b9c4be}
+.note{background:var(--warn-bg);color:var(--warn-ink);padding:8px 10px;border-radius:6px;margin:8px 0;font-size:13px}
+.info{background:var(--info-bg);color:var(--info-ink);padding:8px 10px;border-radius:6px;margin:8px 0;font-size:13px}
+.err{color:var(--crit)}.ok{color:var(--accent);font-weight:600}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0 16px;margin-bottom:10px}
+.sum div{padding:8px 0;border-top:1px solid var(--line)}.sum b{display:block;font:700 18px var(--f-head);font-variant-numeric:tabular-nums}.sum span{font-size:12px;color:var(--mute)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+th{font-size:12px;color:var(--mute);font-weight:600}
+.ftab{min-width:760px}.ftab td input,.ftab td select{padding:6px}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.due{border:1px solid var(--line);border-left:4px solid #c77700;border-radius:6px;padding:10px;margin:10px 0}
+.due b{font-variant-numeric:tabular-nums}
+.tli{display:grid;gap:12px;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);padding:12px 0;border-top:1px solid var(--line)}
+@media (max-width:720px){.tli{grid-template-columns:1fr}}
+.tli .num{font:700 15px var(--f-head)}
+.times{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14px;font-variant-numeric:tabular-nums;margin-top:6px}
+.times span{color:var(--mute);font-size:12px;padding-top:2px}
+.legline{padding:6px 10px;font-size:12px;color:var(--mute);background:var(--soft);border-radius:4px;font-variant-numeric:tabular-nums}
+.wn{display:block;background:var(--warn-bg);color:var(--warn-ink);border-radius:5px;padding:3px 6px;font-size:12px;margin-top:4px}
+.split{display:block;background:var(--info-bg);color:var(--info-ink);border-radius:5px;padding:4px 8px;font-size:13px;margin-top:6px}
+.kontakt{display:grid;gap:4px 16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:8px}
+.kontakt div{padding:6px 0;border-top:1px solid var(--line)}
+.tel{font-variant-numeric:tabular-nums;font-weight:600;user-select:all}
+.team{border:1px solid var(--line);border-left:6px solid var(--mute);border-radius:6px;padding:10px;margin:10px 0}
+.pt{width:auto}.pt th,.pt td{padding:4px 8px}.pt input{width:76px;padding:5px}
+.big{font:700 20px var(--f-head)}.neg{color:var(--crit)}
+.abg{padding:12px 0;border-top:1px solid var(--line)}
+.lkwsel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.lkwsel button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ladeplan{overflow-x:auto;margin:6px 0}
+.ladeplan svg{display:block;width:100%;min-width:640px;height:auto}
+.ladeplan .pp{cursor:pointer}
+.ladeplan .pp:focus{outline:none}.ladeplan .pp:focus rect.cell,.ladeplan .pp.sel rect.cell{stroke:var(--accent);stroke-width:4}
+.ladeplan text{fill:var(--ink);font-family:var(--f-body)}
+.palx{border:1px solid var(--line);border-radius:6px;padding:10px;margin-top:10px}
+.abg .src{display:grid;gap:10px;grid-template-columns:2fr 1fr;max-width:420px;margin-bottom:8px}
+.line3{display:grid;gap:10px;grid-template-columns:2fr 1fr auto;align-items:end;margin-bottom:8px}
+@media (max-width:520px){.line3{grid-template-columns:1fr}}
+.infob{padding:10px 0;border-top:1px solid var(--line)}.infob:first-child{border-top:0}
+.infob textarea{min-height:110px}
+.chk{display:flex;align-items:center;color:var(--ink);font-size:14px;margin:0}
+details{margin-top:10px}summary{cursor:pointer;font-size:13px;color:var(--mute)}
+textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
+.overlay{max-width:420px;margin:40px auto}
+.list{display:grid;gap:6px;margin:8px 0}
+.list button{text-align:left}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:no-preference){.map img{transition:opacity .2s}}
+</style>
+
+<div class="wrap">
+<div class="top"><h1>Roadbook Weihnachtspäckchenkonvoi</h1><img id="logo" alt="Logo" hidden></div>
+
+<div class="bar" id="syncbar" hidden><span id="syncstate"><span class="dot"></span>Lokal</span><span class="sp"></span><span id="presence" class="mute"></span><button type="button" class="mini" id="btnSwitch">Konvoi wechseln</button><button type="button" class="mini" id="btnLogout">Abmelden</button></div>
+
+<section id="v-auth" class="overlay" hidden>
+<div class="panel"><h2>Anmelden</h2>
+<p class="small" style="margin-top:-4px">Zugang bekommst du von der Konvoileitung.</p>
+<form id="loginForm"><div style="display:grid;gap:10px">
+<div><label for="lmail">E-Mail</label><input id="lmail" type="email" autocomplete="username" required></div>
+<div><label for="lpass">Passwort</label><input id="lpass" type="password" autocomplete="current-password" required></div>
+</div><div class="row"><button type="submit" class="primary">Anmelden</button><button type="button" id="btnForgot">Passwort vergessen</button></div></form>
+<form id="newPassForm" hidden><div><label for="npass">Neues Passwort (mindestens 8 Zeichen)</label><input id="npass" type="password" autocomplete="new-password" minlength="8" required></div>
+<div class="row"><button type="submit" class="primary">Passwort speichern</button></div></form>
+<p id="amsg" class="small" aria-live="polite"></p></div>
+</section>
+
+<section id="v-kwahl" class="overlay" hidden>
+<div class="panel"><h2>Konvoi wählen</h2><div class="list" id="klist"></div>
+<div id="knew" hidden><h3>Neuen Konvoi anlegen</h3><div class="line"><input id="kname" placeholder="z. B. Bulgarien 2026"><button type="button" class="primary" id="btnKnew">Anlegen</button></div>
+<label class="chk" style="margin-top:8px;font-size:13px"><input type="checkbox" id="kimport">Daten aus diesem Browser übernehmen</label></div>
+<p id="kmsg" class="small" aria-live="polite"></p></div>
+</section>
+
+<div id="app">
+<div class="tabs" role="tablist">
+<button class="tab" role="tab" id="tab-planung" data-tab="planung" aria-selected="true">Planung</button>
+<button class="tab" role="tab" id="tab-roadbook" data-tab="roadbook" aria-selected="false">Roadbook</button>
+<button class="tab" role="tab" id="tab-paeckchen" data-tab="paeckchen" aria-selected="false">Päckchen zählen</button>
+</div>
+<div id="toasts"></div>
+<p id="rolehint" class="info" hidden>Du hast Lesezugriff. Die Planung ändert die Konvoileitung; Päckchen-Abgaben kannst du erfassen.</p>
+
+<section id="v-planung">
+<fieldset id="fsPlan">
+<div class="panel"><h2>Konvoi</h2><div class="g">
+<div><label for="name">Aktion</label><input id="name" placeholder="z. B. Bulgarien 2026"></div>
+<div><label for="date">Abfahrt Datum</label><input id="date" type="date"></div>
+<div><label for="time">Abfahrt Uhrzeit</label><input id="time" type="time"></div>
+<div><label for="speed">Lkw-Schnitt (km/h)</label><input id="speed" type="number" min="30" max="90" step="any" placeholder="70"></div>
+<div><label for="maxh">Fahrerwechsel nach (h)</label><input id="maxh" type="number" min="1" max="12" step="0.5" placeholder="4"></div>
+<div><label for="dwell">Standard-Pause (Min.)</label><input id="dwell" type="number" min="0" step="5" placeholder="30"></div>
+<div><label for="fahrer">Fahrer pro Lkw</label><input id="fahrer" type="number" min="1" placeholder="3"></div>
+<div><label for="pkw">Pkw</label><input id="pkw" type="number" min="0" max="60" placeholder="0"></div>
+<div><label for="lkw">Lkw</label><input id="lkw" type="number" min="0" max="60" placeholder="0"></div>
+<div><label for="bus">Reisebusse</label><input id="bus" type="number" min="0" max="60" placeholder="0"></div>
+</div>
+<details><summary>Lkw-Profil für die Routenberechnung</summary><div class="g" style="margin-top:8px">
+<div><label for="tw">Gesamtgewicht (t)</label><input id="tw" type="number" min="1" step="any" placeholder="40"></div>
+<div><label for="th">Höhe (m)</label><input id="th" type="number" min="1" step="any" placeholder="4"></div>
+<div><label for="tb">Breite (m)</label><input id="tb" type="number" min="1" step="any" placeholder="2,55"></div>
+<div><label for="tl">Länge (m)</label><input id="tl" type="number" min="1" step="any" placeholder="16,5"></div>
+</div></details>
+<p class="small" style="margin-top:8px">Leere Felder rechnen mit den grau angezeigten Standardwerten. Ohne Datum und Uhrzeit gelten vorläufig heute, 06:00 Uhr.</p></div>
+
+<div class="panel"><h2>Teamleitung und Ansprechpartner</h2><div id="kedit"></div>
+<div class="row"><button type="button" id="addk">Ansprechpartner hinzufügen</button></div></div>
+
+<div class="panel"><h2>Teams</h2>
+<p class="small" style="margin-top:-4px">Ein Team ist eine Fahrzeuggruppe mit eigenem Ziel. Trennt es sich unterwegs vom Konvoi, wählst du die Station der Konvoiteilung.</p>
+<div id="tedit"></div>
+<div class="row"><button type="button" id="addteam">Team hinzufügen</button></div></div>
+
+<div class="panel"><h2>Fahrzeuge und Besatzung</h2>
+<div id="fzedit"></div>
+<p class="small">Die Zahl der Zeilen folgt der Anzahl Pkw, Lkw und Reisebusse oben.</p></div>
+
+<div class="panel"><h2>Strecke und Pausenorte</h2>
+<p class="small" style="margin-top:-4px">Pausenorte suchst du selbst: über die Suche, die Schnellsuche um die fällige Stelle oder per Klick in die Karte. Koordinaten wie „47.3794, 19.0544“ gehen auch. Hinweis-Stationen (z. B. Grenze, GO-Box) erscheinen im Roadbook ohne Halt.</p>
+<div id="stations" style="margin-top:10px"></div>
+<div class="row"><button type="button" id="addpause">Pause mit Fahrerwechsel</button><button type="button" id="addhalt">Zwischenhalt</button><button type="button" id="addhinweis">Hinweis / Grenze</button></div>
+<div class="row"><button type="button" class="primary" id="btnRoute">Route berechnen</button></div>
+<p id="rmsg" class="small" style="margin-top:8px" aria-live="polite"></p>
+<div id="dues"></div></div>
+
+<div class="panel"><h2>Infoseiten</h2>
+<p class="small" style="margin-top:-4px">Erscheinen im PDF nach den Etappen. Zeilen mit „- “ am Anfang werden zu Aufzählungspunkten.</p>
+<div id="iedit"></div>
+<div class="row"><button type="button" id="addinfo">Infoseite hinzufügen</button><button type="button" id="addinfotpl">Vorlage einfügen (Packliste, Unterwegs, Grenzen)</button></div></div>
+</fieldset>
+
+<div class="panel"><h2>Karten</h2><div class="g">
+<div><label for="tiles">Kartenquelle (nur für dich)</label><select id="tiles"><option value="carto">CARTO Voyager</option><option value="osmde">OpenStreetMap Deutschland</option><option value="topo">OpenTopoMap</option></select></div></div>
+<div class="row"><button type="button" id="btnMaps">Karten neu erzeugen</button><span class="small" style="display:inline">Zeigt eine Karte „Access blocked“ oder bleibt leer, andere Kartenquelle wählen.</span></div></div>
+</section>
+
+<section id="v-roadbook" hidden>
+<div class="panel" id="out"><h2 id="title">Roadbook Hinreise</h2>
+<div id="notes"></div>
+<div class="sum" id="sum"></div>
+<div id="okontakt"></div>
+<div id="oteams"></div>
+<div id="oov"></div>
+<h3>Zeitplan</h3>
+<div id="tl"></div>
+<div id="obranch"></div>
+<p class="small">Zeiten nach deutscher Zeit, gerechnet mit dem Lkw-Schnitt. Kartendaten © OpenStreetMap-Mitwirkende.</p></div>
+<div class="panel"><h2>PDF</h2>
+<div class="g">
+<label class="chk"><input type="checkbox" id="pdfEt" checked>Etappen-Seiten mit Karten</label>
+<label class="chk"><input type="checkbox" id="pdfInfo" checked>Infoseiten</label>
+<label class="chk"><input type="checkbox" id="pdfTank" checked>Tankprotokoll je Fahrzeug</label>
+<label class="chk"><input type="checkbox" id="pdfNotes" checked>Notizseite</label>
+</div>
+<div class="row"><button type="button" class="primary" id="btnPdf">Roadbook als PDF exportieren</button></div>
+<p id="pdfmsg" class="small" aria-live="polite"></p></div>
+</section>
+
+<section id="v-paeckchen" hidden>
+<div class="panel"><h2>Ladeliste</h2>
+<fieldset id="fsBest">
+<label for="file">Ladeliste hochladen (Excel oder CSV)</label><input type="file" id="file" accept=".xlsx,.xls,.csv,.txt">
+<p id="pmsg" class="small" style="margin-top:6px" aria-live="polite">Erkannt werden Jungen, Mädchen, Unisex sowie Kindergarten, Grundschule, Teenager (oder 5–7, 7–10, 10–15) mit Anzahl. Alternativ unten von Hand eintragen.</p>
+<div style="margin-top:8px"><span class="tag">Geladen</span><div id="best"></div></div></fieldset></div>
+<div class="panel"><h2>Noch an Bord</h2><div class="sum" id="psum"></div><div id="rest"></div></div>
+<div class="panel"><h2>Ladeplan Auflieger</h2>
+<p class="small" style="margin-top:-4px">Sattelzug mit Auflieger 13,60 m, 33 Palettenstellplätze. Die große Zahl zeigt die Päckchen, die auf dem Stellplatz nach allen Abgaben noch verfügbar sind. Klick auf einen Stellplatz zeigt und bearbeitet seine Ladung.</p>
+<div id="ladeplan"></div></div>
+<div class="panel"><h2>Abgaben</h2><div id="abglist"></div>
+<div class="row"><button type="button" class="primary" id="addabg">Abgabe erfassen</button></div></div>
+<datalist id="ortliste"></datalist>
+</section>
+
+<details class="panel"><summary>Daten sichern und übertragen</summary>
+<p class="small">Sichert den Stand als Text. Damit kannst du Daten zwischen Browsern umziehen oder einen Konvoi in die gemeinsame Datenbank übernehmen.</p>
+<div class="row"><button type="button" id="btnCopy">Daten kopieren</button><button type="button" id="btnLoad">Eingefügte Daten laden</button></div>
+<textarea id="bak" class="mono" aria-label="Datensicherung" style="margin-top:8px"></textarea><p id="bmsg" class="small"></p></details>
+<footer class="small" style="margin:20px 0 0;text-align:center">Roadbook-Tool erstellt von Björn Schirmer · Rückfragen und Verbesserungswünsche: <span style="user-select:all">bjoern.schirmer@wpk-ggmbh.de</span> · <span style="user-select:all">0173-7600974</span></footer>
+</div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var LOGO='data:image/png;base64,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';
+var KEY='roadbook-v2',MKEY='roadbook-maps-v1',PKEY='roadbook-prefs';
+var VAL='https://valhalla1.openstreetmap.de/route',OSRM='https://router.project-osrm.org/route/v1/driving/',NOM='https://nominatim.openstreetmap.org/search';
+var TS={carto:{max:19,u:['https://a.basemaps.cartocdn.com/rastertiles/voyager/','https://b.basemaps.cartocdn.com/rastertiles/voyager/'],a:'© OpenStreetMap-Mitwirkende © CARTO'},
+ osmde:{max:19,u:['https://tile.openstreetmap.de/'],a:'© OpenStreetMap-Mitwirkende'},
+ topo:{max:17,u:['https://a.tile.opentopomap.org/','https://b.tile.opentopomap.org/'],a:'© OpenStreetMap-Mitwirkende, SRTM | © OpenTopoMap'}};
+var SX=[['j','Jungen'],['m','Mädchen'],['u','Unisex']],AG=[['k','Kindergarten 5–7'],['g','Grundschule 7–10'],['t','Teenager 10–15']];
+var FZ=[['pkw','Pkw'],['lkw','Lkw'],['bus','Reisebus']];
+var VT={pause:'Fahrerwechsel und Pause',halt:'Zwischenhalt',hinweis:'Hinweis / Grenze'};
+var TCOL=['#2e7d32','#1565c0','#c62828','#f9a825','#6a1b9a','#00838f','#ef6c00','#4e342e'];
+var INFOS=[
+ {titel:'Packliste – Empfehlung',text:'- warme Kleidung und Wechselkleidung\n- festes Schuhwerk, Mütze und Schal\n- Arbeitshandschuhe für das Tragen der Umkartons\n- Warnweste\n- Schlafsack, Reisekissen, Ohrstöpsel\n- Hygieneartikel und Desinfektionsmittel\n- kleine Reiseapotheke\n- Stirn- oder Taschenlampe\n- Powerbank und Ladekabel\n- dicker Edding und Schreibzeug\n- Ausweis, Führerschein, Kreditkarte, Versichertenkarte\n- kleiner Rucksack für Tagestouren'},
+ {titel:'Unterwegs',text:'- Beim Verlassen des Fahrzeugs immer Warnweste tragen.\n- Fotos von Kindern beim Verteilen vorher bei der Einrichtungsleitung erfragen.\n- Bettlern kein Geld geben.\n- Straßenhunde nicht anfassen und nicht füttern.'},
+ {titel:'Grenzen und Maut',text:'- Wartezeiten an Grenzen: borderalarm.com/de/kartenansicht\n- Mautboxen (z. B. GO-Box Österreich) vor der Grenze einschalten.'}];
+function rid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function D0(){return{name:'',date:'',time:'',speed:'',maxh:'',dwell:'',fahrer:'',pkw:'',lkw:'',bus:'',
+ truck:{weight:'',height:'',width:'',length:''},
+ start:{name:'',lat:null,lon:null},vias:[],ziel:{name:'',lat:null,lon:null},
+ legKm:[0],route:null,teamRoutes:{},fz:{pkw:[],lkw:[],bus:[]},teams:[],kontakte:[{rolle:'',name:'',tel:''}],
+ infos:[],bestand:{},abgaben:[]};}
+var DEF={speed:70,maxh:4,dwell:30,time:'06:00'};
+function dwellDef(){return S.dwell===''||S.dwell==null?DEF.dwell:num(S.dwell);}
+var SECT={konvoi:['name','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus','truck','kontakte','infos'],strecke:['start','vias','ziel','legKm'],route:['route','teamRoutes'],fahrzeuge:['fz','teams'],bestand:['bestand','paletten']};
+var S,M={},P={tiles:'carto'},netBlocked=false,mapsFailed=false,busy=false;
+function $(i){return document.getElementById(i);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function num(v){var n=parseFloat(v);return isNaN(n)?0:n;}
+function sumObj(o){var n=0;for(var k in o)n+=num(o[k]);return n;}
+function clone(o){return o==null?o:JSON.parse(JSON.stringify(o));}
+function normalize(){
+ if(!S.vias)S.vias=[];if(!S.abgaben)S.abgaben=[];if(!S.bestand)S.bestand={};if(!S.teams)S.teams=[];if(!S.teamRoutes)S.teamRoutes={};
+ if(!S.kontakte||!S.kontakte.length)S.kontakte=[{rolle:'',name:'',tel:''}];
+ if(!S.infos)S.infos=[];if(!S.paletten||typeof S.paletten!=='object')S.paletten={};if(!S.fz)S.fz={pkw:[],lkw:[],bus:[]};if(!S.legKm)S.legKm=[0];
+ S.vias.forEach(function(v){if(!v.type)v.type=v.wechsel?'pause':'halt';if(v.id==null)v.id=rid();v.id=String(v.id);});
+ S.abgaben.forEach(function(a){a.id=String(a.id);if(!a.pk)a.pk={};});
+ S.infos.forEach(function(x){if(!x.id)x.id=rid();});
+ FZ.forEach(function(t){(S.fz[t[0]]=S.fz[t[0]]||[]).forEach(function(o){if(o&&o.note&&!o.crew){o.crew=o.note;delete o.note;}});});
+ if(!S.start)S.start={name:'',lat:null,lon:null};if(!S.ziel)S.ziel={name:'',lat:null,lon:null};
+}
+function mergeInto(d){if(!d||typeof d!=='object')return;for(var k in d){if(k==='truck')S.truck=Object.assign({},S.truck,d.truck);else if(k==='fz')S.fz=Object.assign({pkw:[],lkw:[],bus:[]},d.fz);else if(k!=='plan'&&k!=='planSig'&&k!=='tiles')S[k]=d[k];}normalize();}
+S=D0();
+try{var raw=localStorage.getItem(KEY);if(raw)mergeInto(JSON.parse(raw));}catch(e){}
+try{var rm=localStorage.getItem(MKEY);if(rm)M=JSON.parse(rm)||{};}catch(e){M={};}
+try{var rp=localStorage.getItem(PKEY);if(rp)P=Object.assign(P,JSON.parse(rp));}catch(e){}
+normalize();
+function savePrefs(){try{localStorage.setItem(PKEY,JSON.stringify(P));}catch(e){}}
+
+/* ---------- Gemeinsame Nutzung (Supabase) ---------- */
+var CFG=window.ROADBOOK_CONFIG||{};
+var C={on:false,client:null,user:null,role:'planer',konvoi:null,ver:{},dirty:{},timer:null,chan:null,state:'',lastSave:null,members:{}};
+function saveLocal(){if(C.konvoi)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function canEdit(sec){return !C.on||C.role==='planer'||/^abgabe:/.test(sec);}
+function touch(){var secs=[].slice.call(arguments);saveLocal();if(!C.konvoi)return;secs.forEach(function(s){if(canEdit(s))C.dirty[s]=1;});clearTimeout(C.timer);C.timer=setTimeout(flush,900);setSync('busy','Ungespeicherte Änderungen');}
+function pack(sec){if(/^abgabe:/.test(sec)){var id=sec.slice(7);return clone(S.abgaben.find(function(a){return a.id===id;})||null);}var o={};SECT[sec].forEach(function(k){o[k]=S[k];});return clone(o);}
+function unpack(sec,obj){
+ if(/^abgabe:/.test(sec)){var id=sec.slice(7),i=S.abgaben.findIndex(function(a){return a.id===id;});if(!obj){if(i>=0)S.abgaben.splice(i,1);return;}obj.id=id;if(i>=0)S.abgaben[i]=obj;else S.abgaben.push(obj);normalize();return;}
+ if(!SECT[sec]||!obj)return;SECT[sec].forEach(function(k){if(k in obj)S[k]=obj[k];});normalize();
+}
+function setSync(kind,text){var el=$('syncstate');if(!el)return;C.state=kind;el.innerHTML='<span class="dot '+(kind==='ok'?'on':kind==='busy'?'busy':kind==='off'?'off':'')+'"></span>'+esc(text);}
+function who(){return C.user?(C.members[String(C.user.email).toLowerCase()]||C.user.email):'';}
+function syncLabel(){return (C.konvoi?C.konvoi.name+' · ':'')+who()+(C.role==='planer'?' (Planung)':' (Lesen)');}
+var flushing=false,forceFill=false;
+async function flush(){
+ if(!C.konvoi||!C.client)return;
+ if(flushing){clearTimeout(C.timer);C.timer=setTimeout(flush,500);return;}
+ var secs=Object.keys(C.dirty);if(!secs.length)return;
+ flushing=true;setSync('busy','Speichere …');
+ try{
+  for(var i=0;i<secs.length;i++){
+   var sec=secs[i];if(!C.dirty[sec])continue;delete C.dirty[sec];
+   var body=pack(sec),del=/^abgabe:/.test(sec)&&!body;
+   try{
+    if(del&&!C.ver[sec])continue;
+    var r=await C.client.rpc('speichern',{p_konvoi:C.konvoi.id,p_bereich:sec,p_inhalt:body,p_version:C.ver[sec]||0});
+    if(r.error)throw r.error;C.ver[sec]=r.data;
+    if(sec==='konvoi'&&S.name&&S.name!==C.konvoi.name){C.konvoi.name=S.name;C.client.from('konvois').update({name:S.name}).eq('id',C.konvoi.id).then(function(){},function(){});}
+   }catch(e){
+    var msg=(e&&(e.message||e.details))||'';
+    if(/konflikt/i.test(msg)){await reloadSection(sec);toast('Jemand hat „'+secName(sec)+'“ gleichzeitig geändert. Der neue Stand ist übernommen, bitte deine letzte Eingabe dort prüfen.');}
+    else if(/berechtigung/i.test(msg)){toast('Keine Berechtigung zum Speichern von „'+secName(sec)+'“.');}
+    else{C.dirty[sec]=1;setSync('off','Offline – Änderungen werden nachgeholt');clearTimeout(C.timer);C.timer=setTimeout(flush,6000);return;}
+   }
+  }
+  C.lastSave=new Date();setSync('ok',syncLabel()+' · gespeichert '+tfmt.format(C.lastSave));
+ }finally{flushing=false;}
+}
+function secName(sec){return {konvoi:'Konvoi und Infos',strecke:'Strecke',route:'Route',fahrzeuge:'Fahrzeuge und Teams',bestand:'Ladeliste'}[sec]||'Abgabe';}
+function toast(t){var n=document.createElement('div');n.className='note';n.setAttribute('role','status');n.textContent=t;$('toasts').appendChild(n);setTimeout(function(){n.remove();},10000);}
+async function reloadSection(sec){forceFill=true;
+ var r=await C.client.from('daten').select('bereich,inhalt,version').eq('konvoi_id',C.konvoi.id).eq('bereich',sec);
+ if(r.error)return;var row=r.data&&r.data[0];
+ if(row){unpack(sec,row.inhalt);C.ver[sec]=row.version;}else{unpack(sec,null);delete C.ver[sec];}
+ rerender(sec);
+}
+function remoteChange(p){
+ var row=p.new&&p.new.bereich?p.new:null,old=p.old||{};
+ if(p.eventType==='DELETE'){var b=old.bereich;if(!b||C.dirty[b])return;unpack(b,null);delete C.ver[b];rerender(b);return;}
+ if(!row)return;var sec=row.bereich;
+ if((C.ver[sec]||0)>=row.version)return;
+ if(C.dirty[sec])return;
+ unpack(sec,row.inhalt);C.ver[sec]=row.version;rerender(sec);
+ setSync('ok',syncLabel()+' · aktualisiert '+tfmt.format(new Date())+(row.geaendert_von?' von '+(C.members[String(row.geaendert_von).toLowerCase()]||row.geaendert_von):''));
+}
+function keepFocus(fn){
+ var a=document.activeElement,id=a&&a.id,s=null,e=null;try{if(a&&a.selectionStart!=null){s=a.selectionStart;e=a.selectionEnd;}}catch(x){}
+ fn();
+ if(id){var b=$(id);if(b&&b!==document.activeElement){b.focus({preventScroll:true});try{if(s!=null)b.setSelectionRange(s,e);}catch(x){}}}
+}
+function rerender(sec){
+ keepFocus(function(){
+  if(sec==='konvoi'){fillFields(forceFill);drawK();drawInfos();drawFz();}
+  else if(sec==='strecke'||sec==='route'){drawStations();drawTeams();}
+  else if(sec==='fahrzeuge'){drawTeams();}
+  else if(sec==='bestand'){drawBest();drawLadeplan();}
+  else if(/^abgabe:/.test(sec)){drawAbg();drawLadeplan();}
+  else if(sec==='fahrzeuge'||sec==='konvoi'){drawLadeplan();}
+  renderRoadbook();calcPk();
+ });
+ forceFill=false;
+}
+function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.onload=res;s.onerror=function(){rej(new Error('Skript nicht geladen: '+src));};document.head.appendChild(s);});}
+function show(v){['v-auth','v-kwahl'].forEach(function(k){$(k).hidden=k!==v;});$('app').hidden=!!v;}
+async function cloudInit(){
+ if(!CFG.supabaseUrl||!CFG.supabaseAnonKey)return;
+ C.on=true;$('syncbar').hidden=false;setSync('busy','Verbinde …');show('v-auth');
+ var libs=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0','https://unpkg.com/@supabase/supabase-js@2.118.0/dist/umd/supabase.js','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
+ for(var li=0;li<libs.length&&!(window.supabase&&window.supabase.createClient);li++){try{await loadScript(libs[li]);}catch(e){}}
+ if(!(window.supabase&&window.supabase.createClient)){$('amsg').textContent='Die Verbindungsbibliothek ließ sich nicht laden. Internetverbindung prüfen und neu laden.';setSync('off','Keine Verbindung');return;}
+ C.client=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey);
+ C.client.auth.onAuthStateChange(function(ev){
+  if(ev==='PASSWORD_RECOVERY'){show('v-auth');$('loginForm').hidden=true;$('newPassForm').hidden=false;$('amsg').textContent='Bitte ein neues Passwort festlegen.';}
+  else if(ev==='SIGNED_OUT'){C.user=null;leaveKonvoi();show('v-auth');setSync('','Abgemeldet');}
+ });
+ var s=await C.client.auth.getSession();
+ if(s.data&&s.data.session&&!/type=recovery/.test(location.hash)){await afterLogin(s.data.session.user);}else{setSync('','Nicht angemeldet');}
+}
+async function afterLogin(user){
+ C.user=user;setSync('busy','Lade …');
+ var m=await C.client.from('mitglieder').select('email,name,rolle');
+ var me=null;C.members={};
+ if(!m.error&&m.data)m.data.forEach(function(x){C.members[String(x.email).toLowerCase()]=x.name||x.email;if(String(x.email).toLowerCase()===String(user.email).toLowerCase())me=x;});
+ if(!me){$('amsg').textContent='Dein Konto ist angemeldet, aber nicht als Mitglied eingetragen. Bitte bei der Konvoileitung melden.';show('v-auth');setSync('off','Kein Mitglied');return;}
+ C.role=me.rolle==='planer'?'planer':'leser';
+ var want=null;try{want=new URLSearchParams(location.search).get('k')||localStorage.getItem('roadbook-konvoi');}catch(e){}
+ await chooseKonvoi(want);
+}
+async function chooseKonvoi(want){
+ var r=await C.client.from('konvois').select('id,name,erstellt_am').order('erstellt_am',{ascending:false});
+ if(r.error){$('kmsg').textContent='Konvois konnten nicht geladen werden: '+r.error.message;show('v-kwahl');return;}
+ var list=r.data||[],hit=want&&list.find(function(k){return k.id===want;});
+ if(hit){await openKonvoi(hit);return;}
+ $('klist').innerHTML=list.length?list.map(function(k){return '<button type="button" data-kid="'+esc(k.id)+'">'+esc(k.name)+'</button>';}).join(''):'<p class="mute">Noch kein Konvoi angelegt.</p>';
+ $('klist')._list=list;$('knew').hidden=C.role!=='planer';setSync('ok',who()+(C.role==='planer'?' (Planung)':' (Lesen)'));show('v-kwahl');
+}
+async function openKonvoi(k){
+ leaveKonvoi();
+ var r=await C.client.from('daten').select('bereich,inhalt,version').eq('konvoi_id',k.id);
+ if(r.error){$('kmsg').textContent='Daten konnten nicht geladen werden: '+r.error.message;show('v-kwahl');return;}
+ S=D0();S.infos=[];C.ver={};C.dirty={};
+ var hasKonvoi=false;
+ (r.data||[]).forEach(function(row){unpack(row.bereich,row.inhalt);C.ver[row.bereich]=row.version;if(row.bereich==='konvoi')hasKonvoi=true;});
+ if(!hasKonvoi){S.name=k.name;}
+ normalize();
+ C.konvoi={id:k.id,name:k.name};
+ try{localStorage.setItem('roadbook-konvoi',k.id);var u=new URL(location.href);u.searchParams.set('k',k.id);history.replaceState(null,'',u.toString());}catch(e){}
+ M={};try{var mm=localStorage.getItem(MKEY+'-'+k.id);if(mm)M=JSON.parse(mm)||{};}catch(e){}
+ show(null);initAll();
+ setSync('ok',syncLabel());
+ C.chan=C.client.channel('konvoi-'+k.id,{config:{presence:{key:C.user.email}}})
+  .on('postgres_changes',{event:'*',schema:'public',table:'daten',filter:'konvoi_id=eq.'+k.id},remoteChange)
+  .on('presence',{event:'sync'},function(){if(!C.chan)return;var st=C.chan.presenceState(),n=Object.keys(st).filter(function(e){return e.toLowerCase()!==String(C.user.email).toLowerCase();}).map(function(e){return C.members[e.toLowerCase()]||e;});$('presence').textContent=n.length?'Auch da: '+n.join(', '):'';})
+  .subscribe(function(status){if(status==='SUBSCRIBED'){C.chan.track({at:Date.now()});}else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){setSync('off','Echtzeit getrennt – Seite neu laden');}});
+ if(!hasKonvoi&&C.role==='planer')touch('konvoi');
+}
+function leaveKonvoi(){if(C.chan&&C.client){try{C.client.removeChannel(C.chan);}catch(e){}}C.chan=null;C.konvoi=null;$('presence').textContent='';}
+function applyRole(){var ro=C.on&&C.role!=='planer';$('fsPlan').disabled=ro;$('fsBest').disabled=ro;$('rolehint').hidden=!ro;}
+$('loginForm').addEventListener('submit',async function(e){
+ e.preventDefault();if(!C.client)return;$('amsg').textContent='Anmeldung …';
+ var r=await C.client.auth.signInWithPassword({email:$('lmail').value.trim(),password:$('lpass').value});
+ if(r.error){$('amsg').textContent='Anmeldung fehlgeschlagen: E-Mail oder Passwort stimmt nicht.';return;}
+ $('amsg').textContent='';$('lpass').value='';await afterLogin(r.data.user);
+});
+$('btnForgot').addEventListener('click',async function(){
+ if(!C.client)return;var em=$('lmail').value.trim();if(!em){$('amsg').textContent='Bitte zuerst die E-Mail-Adresse eintragen.';return;}
+ var r=await C.client.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});
+ $('amsg').textContent=r.error?'Das hat nicht geklappt: '+r.error.message:'Wenn die Adresse bekannt ist, kommt gleich eine E-Mail mit einem Link zum Zurücksetzen.';
+});
+$('newPassForm').addEventListener('submit',async function(e){
+ e.preventDefault();var r=await C.client.auth.updateUser({password:$('npass').value});
+ if(r.error){$('amsg').textContent='Passwort nicht gespeichert: '+r.error.message;return;}
+ $('newPassForm').hidden=true;$('loginForm').hidden=false;$('amsg').textContent='Passwort gespeichert.';$('npass').value='';
+ try{history.replaceState(null,'',location.pathname+location.search);}catch(x){}
+ var s=await C.client.auth.getSession();if(s.data&&s.data.session)await afterLogin(s.data.session.user);
+});
+$('klist').addEventListener('click',function(e){var id=e.target.dataset.kid;if(!id)return;var k=$('klist')._list.find(function(x){return x.id===id;});if(k)openKonvoi(k);});
+$('btnKnew').addEventListener('click',async function(){
+ var n=$('kname').value.trim();if(!n){$('kmsg').textContent='Bitte einen Namen eingeben.';return;}
+ var local=null;if($('kimport').checked){try{local=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}}
+ var r=await C.client.from('konvois').insert({name:n,erstellt_von:C.user.email}).select('id,name').single();
+ if(r.error){$('kmsg').textContent='Anlegen fehlgeschlagen: '+r.error.message;return;}
+ $('kname').value='';
+ await openKonvoi(r.data);
+ if(local){mergeInto(local);S.name=n;initAll();touch('konvoi','strecke','route','fahrzeuge','bestand');S.abgaben.forEach(function(a){touch('abgabe:'+a.id);});}
+});
+$('btnSwitch').addEventListener('click',async function(){if(!C.client||!C.user)return;await flush();leaveKonvoi();try{localStorage.removeItem('roadbook-konvoi');var u=new URL(location.href);u.searchParams.delete('k');history.replaceState(null,'',u.toString());}catch(e){}chooseKonvoi(null);});
+$('btnLogout').addEventListener('click',async function(){if(!C.client)return;await flush();leaveKonvoi();await C.client.auth.signOut();show('v-auth');});
+window.addEventListener('beforeunload',function(e){if(Object.keys(C.dirty).length){flush();e.preventDefault();e.returnValue='';}});
+
+/* ---------- Stationen ---------- */
+function stationList(){var a=[{k:'start',o:S.start,key:'start'}];S.vias.forEach(function(v,i){a.push({k:'via',o:v,i:i,key:'v'+v.id});});a.push({k:'ziel',o:S.ziel,key:'ziel'});return a;}
+function vt(s){return s.k==='via'?s.o.type:s.k;}
+function isPause(s){return vt(s)==='pause';}
+function isStop(s){return vt(s)!=='hinweis';}
+function label(s){return s.k==='start'?'Start':s.k==='ziel'?'Ziel':VT[s.o.type]||'Zwischenhalt';}
+function fixLeg(){var n=S.vias.length+1;while(S.legKm.length<n)S.legKm.push(0);S.legKm.length=n;}
+function stationsKm(){fixLeg();var c=[0],t=0;for(var i=0;i<S.legKm.length;i++){t+=num(S.legKm[i]);c.push(t);}return c;}
+function dwellOf(s){return s.k==='via'?num(s.o.dwell):0;}
+function stName(s){return s.o.name||(isPause(s)?'Pausenort offen':label(s));}
+
+/* ---------- Geometrie ---------- */
+function dec(str,pr){var i=0,lat=0,lon=0,out=[],f=Math.pow(10,pr);
+ while(i<str.length){var b,s=0,r=0;do{b=str.charCodeAt(i++)-63;r|=(b&31)<<s;s+=5;}while(b>=32);lat+=(r&1)?~(r>>1):(r>>1);
+  s=0;r=0;do{b=str.charCodeAt(i++)-63;r|=(b&31)<<s;s+=5;}while(b>=32);lon+=(r&1)?~(r>>1):(r>>1);out.push([lat/f,lon/f]);}
+ return out;}
+function hav(a,b){var R=6371,t=Math.PI/180,dl=(b[0]-a[0])*t,dn=(b[1]-a[1])*t,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dn/2)*Math.sin(dn/2);return 2*R*Math.asin(Math.sqrt(x));}
+function pointAt(km,R){R=R||S.route;if(!R)return null;var c=R.cum;
+ for(var i=1;i<c.length;i++){if(c[i]>=km){var f=(km-c[i-1])/Math.max(c[i]-c[i-1],1e-9),a=R.pts[i-1],b=R.pts[i];return[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];}}
+ return R.pts[R.pts.length-1];}
+function px(lat,lon,z){var n=256*Math.pow(2,z),r=lat*Math.PI/180;return[(lon+180)/360*n,(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n];}
+function ll(x,y,z){var n=256*Math.pow(2,z);return[Math.atan(Math.sinh(Math.PI*(1-2*y/n)))*180/Math.PI,x/n*360-180];}
+function simplify(pts,cum,f){var Pp=[],Cc=[],last=-1;for(var i=0;i<pts.length;i++){var c=cum[i]*f;if(last<0||c-last>=0.3||i===pts.length-1){Pp.push([Math.round(pts[i][0]*1e5)/1e5,Math.round(pts[i][1]*1e5)/1e5]);Cc.push(Math.round(c*100)/100);last=c;}}return{pts:Pp,cum:Cc};}
+
+/* ---------- Netz ---------- */
+async function fj(url,opt,ms){var c=new AbortController(),t=setTimeout(function(){c.abort();},ms||40000);
+ try{var r;try{r=await fetch(url,Object.assign({signal:c.signal},opt||{}));}catch(e){if(e&&e.name!=='AbortError'){netBlocked=true;}throw e;}
+  netBlocked=false;
+  if(!r.ok){var tx='';try{tx=(await r.text()).slice(0,160);}catch(e){}throw new Error('HTTP '+r.status+(tx?' – '+tx:''));}
+  return await r.json();}finally{clearTimeout(t);}}
+function netMsg(e){
+ if(e&&e.name==='AbortError')return 'Zeitüberschreitung bei OpenStreetMap. Bitte erneut versuchen.';
+ if(e&&/^HTTP/.test(e.message))return 'OpenStreetMap-Dienst meldet: '+e.message;
+ return 'Keine Verbindung zu OpenStreetMap. Koordinaten und Kilometer gehen auch von Hand.';}
+async function route2(locs){
+ var legs=[],pts=[],profile='truck',why='';
+ try{
+  var q={locations:locs.map(function(l){return{lat:l[0],lon:l[1],type:'break'};}),costing:'truck',costing_options:{truck:{weight:num(S.truck.weight)||40,height:num(S.truck.height)||4,width:num(S.truck.width)||2.55,length:num(S.truck.length)||16.5}},directions_options:{units:'kilometers',language:'de-DE'}};
+  var r=await fj(VAL+'?json='+encodeURIComponent(JSON.stringify(q)),null,60000);
+  r.trip.legs.forEach(function(l,i){var d=dec(l.shape,6);pts=pts.concat(i?d.slice(1):d);legs.push(l.summary.length);});
+ }catch(e1){
+  if(netBlocked)throw e1;why=e1.message||'';profile='car';legs=[];pts=[];
+  var u=OSRM+locs.map(function(l){return l[1]+','+l[0];}).join(';')+'?overview=full&geometries=polyline6&steps=false';
+  var r2=await fj(u,null,60000),rt=r2.routes[0];pts=dec(rt.geometry,6);rt.legs.forEach(function(l){legs.push(l.distance/1000);});
+ }
+ var cum=[0];for(var i=1;i<pts.length;i++)cum.push(cum[i-1]+hav(pts[i-1],pts[i]));
+ var tot=legs.reduce(function(a,b){return a+b;},0),f=cum[cum.length-1]>0?tot/cum[cum.length-1]:1,sp=simplify(pts,cum,f);
+ return{pts:sp.pts,cum:sp.cum,legs:legs,profile:profile,why:why};
+}
+
+/* ---------- Karten ---------- */
+var tileCache={};
+function tsrc(){return TS[P.tiles]||TS.carto;}
+function loadTile(z,x,y){
+ var src=tsrc(),k=z+'/'+x+'/'+y,ck=P.tiles+'|'+k;if(tileCache[ck])return tileCache[ck];
+ tileCache[ck]=new Promise(function(res){
+  var i=0;
+  (function next(){
+   if(i>=src.u.length){delete tileCache[ck];res(null);return;}
+   var img=new Image(),done=false,to=setTimeout(function(){if(!done){done=true;i++;next();}},15000);
+   img.crossOrigin='anonymous';
+   img.onload=function(){if(done)return;done=true;clearTimeout(to);res(img);};
+   img.onerror=function(){if(done)return;done=true;clearTimeout(to);i++;next();};
+   img.src=src.u[i]+k+'.png';
+  })();
+ });
+ return tileCache[ck];
+}
+function routeSig(){var R=S.route;return (P.tiles||'carto')+'|'+(R?R.pts.length+':'+R.cum[R.cum.length-1]:'0');}
+async function renderMap(job){
+ var v=job.view,w=v.w,h=v.h,cv=document.createElement('canvas');cv.width=w;cv.height=h;var g=cv.getContext('2d');
+ g.fillStyle='#e8ece9';g.fillRect(0,0,w,h);
+ var c=px(v.lat,v.lon,v.z),x0=c[0]-w/2,y0=c[1]-h/2,n=Math.pow(2,v.z),ok=0,jobs=[];
+ for(var tx=Math.floor(x0/256);tx<=Math.floor((x0+w)/256);tx++)for(var ty=Math.floor(y0/256);ty<=Math.floor((y0+h)/256);ty++){
+  if(ty<0||ty>=n)continue;
+  (function(tx,ty){jobs.push(loadTile(v.z,((tx%n)+n)%n,ty).then(function(img){if(img){g.drawImage(img,tx*256-x0,ty*256-y0);ok++;}}));})(tx,ty);
+ }
+ await Promise.all(jobs);
+ if(!ok)return{err:'tiles'};
+ g.lineJoin='round';g.lineCap='round';
+ (job.lines||[]).forEach(function(L){var Pp=L.pts;if(!Pp||Pp.length<2)return;
+  [['rgba(255,255,255,.9)',L.w+4],[L.col,L.w]].forEach(function(st){
+   g.beginPath();for(var i=0;i<Pp.length;i++){var p=px(Pp[i][0],Pp[i][1],v.z);if(i)g.lineTo(p[0]-x0,p[1]-y0);else g.moveTo(p[0]-x0,p[1]-y0);}
+   g.strokeStyle=st[0];g.lineWidth=st[1];g.stroke();});});
+ (job.markers||[]).forEach(function(m){
+  var p=px(m.lat,m.lon,v.z),x=p[0]-x0,y=p[1]-y0,r=m.label.length>1?13:11;
+  g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=m.col;g.fill();g.lineWidth=3;g.strokeStyle='#fff';g.stroke();
+  g.fillStyle='#fff';g.font='bold 12px Inter,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(m.label,x,y+0.5);
+ });
+ g.font='11px Arial,sans-serif';var at=tsrc().a,aw=g.measureText(at).width+10;
+ g.fillStyle='rgba(255,255,255,.85)';g.fillRect(w-aw,h-17,aw,17);g.fillStyle='#333';g.textAlign='right';g.textBaseline='middle';g.fillText(at,w-5,h-8);
+ try{return{url:cv.toDataURL('image/jpeg',0.82)};}catch(e){return{err:'taint'};}
+}
+function defZ(s){return s.o.lat!=null?tsrc().max:13;}
+function stView(s){var o=s.o,c=o.lat!=null?[o.lat,o.lon]:(o.ref?[o.ref.lat,o.ref.lon]:null);if(!c)return null;return{lat:c[0],lon:c[1],z:Math.min(o.lat!=null&&o.z?o.z:defZ(s),tsrc().max),w:640,h:360};}
+function fitView(pts,w,h){
+ if(!pts.length)return null;var a=90,b=-90,c=180,d=-180;pts.forEach(function(p){a=Math.min(a,p[0]);b=Math.max(b,p[0]);c=Math.min(c,p[1]);d=Math.max(d,p[1]);});
+ for(var z=14;z>3;z--){var p1=px(b,c,z),p2=px(a,d,z);if(p2[0]-p1[0]<=w-70&&p2[1]-p1[1]<=h-70)break;}
+ var q1=px(b,c,z),q2=px(a,d,z),m=ll((q1[0]+q2[0])/2,(q1[1]+q2[1])/2,z);return{lat:m[0],lon:m[1],z:z,w:w,h:h};
+}
+function slicePts(R,a,b){if(!R)return[];var o=[];for(var i=0;i<R.pts.length;i++){if(R.cum[i]>=a-0.01&&R.cum[i]<=b+0.01)o.push(R.pts[i]);}return o;}
+function sampled(Pp,max){var o=[],st=Math.max(1,Math.floor(Pp.length/max));for(var i=0;i<Pp.length;i+=st)o.push(Pp[i]);if(Pp.length)o.push(Pp[Pp.length-1]);return o;}
+var MAINC='#b3261e';
+var NEED={};
+function buildJobs(){
+ var J={},st=stationList(),rs=routeSig(),pts=[],main=S.route?[{pts:S.route.pts,col:MAINC,w:4}]:[];
+ st.forEach(function(s,i){
+  if(s.o.lat!=null)pts.push([s.o.lat,s.o.lon]);
+  var v=stView(s);if(!v)return;
+  var mk=[];
+  if(s.k==='via'&&s.o.ref)mk.push({lat:s.o.ref.lat,lon:s.o.ref.lon,label:'!',col:'#c77700'});
+  if(s.o.lat!=null)mk.push({lat:s.o.lat,lon:s.o.lon,label:String(i+1),col:s.o.type==='hinweis'?'#1d4f8a':'#1d5c45'});
+  J[s.key]={key:s.key,view:v,markers:mk,lines:main};
+ });
+ var tl=[];S.teams.forEach(function(t){var r=S.teamRoutes[t.id];if(r&&r.pts)tl.push({pts:r.pts,col:t.farbe||'#555',w:3});});
+ if(S.route)pts=pts.concat(sampled(S.route.pts,400));
+ S.teams.forEach(function(t){var r=S.teamRoutes[t.id];if(r&&r.pts)pts=pts.concat(sampled(r.pts,100));if(t.ab&&t.ziel&&t.ziel.lat!=null)pts.push([t.ziel.lat,t.ziel.lon]);});
+ var allMk=st.filter(function(s){return s.o.lat!=null&&isStop(s);}).map(function(s){return{lat:s.o.lat,lon:s.o.lon,label:String(st.indexOf(s)+1),col:isPause(s)?'#c77700':'#1d5c45'};});
+ S.teams.forEach(function(t){if(t.ab&&t.ziel&&t.ziel.lat!=null)allMk.push({lat:t.ziel.lat,lon:t.ziel.lon,label:'Z',col:t.farbe||'#555'});});
+ if(pts.length>1){var ov=fitView(pts,1000,560);if(ov)J.ov={key:'ov',view:ov,lines:main.concat(tl),markers:allMk};}
+ var R=sched();
+ if(S.route)R.dues.forEach(function(d,j){var p=pointAt(d.km);if(p)J['due'+j]={key:'due'+j,view:{lat:p[0],lon:p[1],z:12,w:640,h:360},markers:[{lat:p[0],lon:p[1],label:'!',col:'#c77700'}],lines:main};});
+ R.etappen.forEach(function(e,j){
+  var a=e.from.s.o,b=e.to.s.o;if(a.lat==null||b.lat==null)return;
+  var lp=slicePts(S.route,e.from.km,e.to.km),fp=lp.concat([[a.lat,a.lon],[b.lat,b.lon]]);
+  var v=fitView(fp,640,360);if(!v)return;
+  J['et'+j]={key:'et'+j,view:v,lines:main,markers:[{lat:a.lat,lon:a.lon,label:String(e.from.i+1),col:'#1d5c45'},{lat:b.lat,lon:b.lon,label:String(e.to.i+1),col:isPause(e.to.s)?'#c77700':'#1d5c45'}].concat(e.hints.filter(function(h){return h.s.o.lat!=null;}).map(function(h){return{lat:h.s.o.lat,lon:h.s.o.lon,label:'i',col:'#1d4f8a'};}))};
+ });
+ S.teams.forEach(function(t){var r=S.teamRoutes[t.id];if(!r||!r.pts||!r.pts.length)return;var v=fitView(sampled(r.pts,300),640,360);if(v)J['tm'+t.id]={key:'tm'+t.id,view:v,lines:[{pts:r.pts,col:t.farbe||'#555',w:4}],markers:[{lat:r.pts[0][0],lon:r.pts[0][1],label:'K',col:'#1d5c45'},{lat:r.pts[r.pts.length-1][0],lon:r.pts[r.pts.length-1][1],label:'Z',col:t.farbe||'#555'}]};});
+ for(var k in J){J[k].sig=JSON.stringify([J[k].view,J[k].markers,rs,(J[k].lines||[]).map(function(l){return l.col+l.pts.length;})]);}
+ return J;
+}
+function mapStoreKey(){return C.konvoi?MKEY+'-'+C.konvoi.id:MKEY;}
+function saveMaps(){var keep={};for(var k in M)if(NEED[k])keep[k]=M[k];M=keep;try{localStorage.setItem(mapStoreKey(),JSON.stringify(M));}catch(e){try{localStorage.removeItem(mapStoreKey());}catch(x){}}}
+var mapQ=null,mapAgain=false;
+function updateMapEls(key){
+ var j=NEED[key],c=M[key],fresh=j&&c&&c.sig===j.sig&&c.url;
+ document.querySelectorAll('[data-mapwrap="'+key+'"]').forEach(function(w){
+  var img=w.querySelector('img'),msg=w.querySelector('.mapmsg');
+  if(fresh){if(img.getAttribute('src')!==c.url)img.src=c.url;img.hidden=false;msg.hidden=true;w.classList.remove('loading');}
+  else if(c&&c.url&&!mapsFailed){img.src=c.url;img.hidden=false;msg.hidden=true;w.classList.add('loading');}
+  else{img.hidden=true;msg.hidden=false;msg.textContent=mapsFailed?'Karte nicht verfügbar: Kartenkacheln lassen sich hier nicht laden. Andere Kartenquelle wählen.':'Karte wird erzeugt …';}
+ });
+}
+function ensureMaps(){
+ NEED=buildJobs();for(var k in NEED)updateMapEls(k);
+ if(mapQ){mapAgain=true;return mapQ;}
+ mapQ=(async function(){
+  await null;
+  try{
+   do{mapAgain=false;
+    var keys=Object.keys(NEED);
+    for(var n=0;n<keys.length;n++){var k=keys[n],j=NEED[k];if(!j||(M[k]&&M[k].sig===j.sig))continue;if(mapsFailed)break;
+     var r=await renderMap(j);
+     if(r.url){M[k]={sig:j.sig,url:r.url,view:j.view};}else{mapsFailed=true;}
+     updateMapEls(k);if(mapAgain)break;}
+   }while(mapAgain);
+   saveMaps();
+  }catch(e){if(window.console)console.warn('Karten:',e);}
+  finally{mapQ=null;}
+ })();
+ return mapQ;
+}
+var mapT=null;function ensureMapsSoon(){clearTimeout(mapT);mapT=setTimeout(ensureMaps,250);}
+function mapBox(key,pick,alt){return '<div class="map loading" data-mapwrap="'+key+'"><img alt="'+esc(alt)+'"'+(pick?' class="pick" data-pick="'+key+'" title="Klick setzt den Ort"':'')+' hidden><span class="mapmsg">Karte wird erzeugt …</span>'+(pick?'<div class="mapctl"><button type="button" data-zoom="1" aria-label="Hineinzoomen">+</button><button type="button" data-zoom="-1" aria-label="Herauszoomen">−</button></div>':'')+'</div>';}
+
+/* ---------- Zeitplan ---------- */
+function startTime(){var d=S.date||new Date().toISOString().slice(0,10),p=d.split('-'),q=(S.time||DEF.time).split(':');return new Date(+p[0],(+p[1]||1)-1,+p[2]||1,+q[0]||0,+q[1]||0).getTime();}
+function dueWalk(fromKm,legKm,since,t,sp,LIM,after,out){
+ var pos=0,s2=since,g=0;
+ while(s2+(legKm-pos)/sp*60>LIM+0.01&&g++<60){pos+=Math.max(0,LIM-s2)*sp/60;out.push({km:fromKm+pos,after:after,time:new Date(t+pos/sp*3600000),run:since+legKm/sp*60});s2=0;}
+}
+function sched(){
+ var st=stationList(),cum=stationsKm(),sp=num(S.speed)||70,LIM=(num(S.maxh)||4)*60,t=startTime();
+ var rows=[],dues=[],since=0,drive=0,stand=0,wc=0,sunday=false;
+ st.forEach(function(s,i){
+  var legKm=0,legMin=0,w=[];
+  if(i>0){
+   legKm=cum[i]-cum[i-1];legMin=legKm/sp*60;
+   dueWalk(cum[i-1],legKm,since,t,sp,LIM,i-1,dues);
+   if(since+legMin>LIM+0.5)w.push(hm(since+legMin)+' ohne Fahrerwechsel seit dem letzten Wechsel (Grenze '+hm(LIM)+').');
+   since+=legMin;t+=legMin*60000;drive+=legMin;
+  }
+  var arr=new Date(t);
+  if(isPause(s)){since=0;wc++;}
+  var dw=dwellOf(s);stand+=dw;t+=dw*60000;var dep=new Date(t);
+  if(arr.getDay()===0||dep.getDay()===0)sunday=true;
+  if(isPause(s)&&s.o.lat==null)w.push('Pausenort noch nicht gewählt.');
+  rows.push({s:s,i:i,km:cum[i],legKm:legKm,legMin:legMin,arr:arr,dep:dep,dwell:dw,warn:w,since:since});
+ });
+ var stops=rows.filter(function(r){return isStop(r.s);}),et=[];
+ for(var j=1;j<stops.length;j++){(function(a,b){
+  et.push({from:a,to:b,km:b.km-a.km,min:(b.km-a.km)/sp*60,hints:rows.filter(function(r){return r.i>a.i&&r.i<b.i;}),splits:S.teams.filter(function(t){return t.ab===b.s.key;})});})(stops[j-1],stops[j]);}
+ var branches=S.teams.filter(function(t){return t.ab;}).map(function(t){
+  var r=rows.find(function(x){return x.s.key===t.ab;}),tr=S.teamRoutes[t.id];if(!r)return null;
+  var km=tr?num(tr.km):0,bd=[];if(km)dueWalk(0,km,r.since,r.dep.getTime(),sp,LIM,-1,bd);
+  return{team:t,row:r,km:km,min:km/sp*60,arr:new Date(r.dep.getTime()+km/sp*3600000),dues:bd};
+ }).filter(Boolean);
+ return{rows:rows,dues:dues,total:cum[cum.length-1],drive:drive,stand:stand,wc:wc,sunday:sunday,etappen:et,branches:branches};
+}
+var dfmt=new Intl.DateTimeFormat('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}),tfmt=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'});
+function hm(m){m=Math.round(m);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+' h';}
+function stamp(d){return dfmt.format(d)+', '+tfmt.format(d);}
+function kmf(x){return (x<10&&x>0?(Math.round(x*10)/10):Math.round(x)).toLocaleString('de-DE')+' km';}
+
+/* ---------- Ortssuche ---------- */
+var coordRe=/^\s*(-?\d{1,2}(?:[.,]\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/;
+function parseCoord(q){var m=q.match(coordRe);if(!m)return null;var la=parseFloat(m[1].replace(',','.')),lo=parseFloat(m[2].replace(',','.'));return Math.abs(la)<=90&&Math.abs(lo)<=180?[la,lo]:null;}
+async function nominatim(q,c,bounded,limit){
+ var u=NOM+'?format=jsonv2&limit='+(limit||5)+'&accept-language=de&q='+encodeURIComponent(q);
+ if(c){var dl=0.3,dn=0.22;u+='&viewbox='+(c[1]-dl)+','+(c[0]+dn)+','+(c[1]+dl)+','+(c[0]-dn)+(bounded?'&bounded=1':'');}
+ var r=await fj(u,null,20000);if(c)r.sort(function(a,b){return hav(c,[+a.lat,+a.lon])-hav(c,[+b.lat,+b.lon]);});return r;
+}
+function hitsHtml(r,c){return r.map(function(d,j){return '<button type="button" class="hit" data-hit="'+j+'">'+esc(d.display_name)+(c?'<small>'+hav(c,[+d.lat,+d.lon]).toFixed(1).replace('.',',')+' km entfernt</small>':'')+'</button>';}).join('');}
+function shortName(d,two){var p=d.display_name.split(',').map(function(x){return x.trim();});return two?p.slice(0,2).join(', '):(p.length>1?p[0]+', '+p[p.length-1]:p[0]);}
+
+/* ---------- Planung: Stationen ---------- */
+function statusOf(o){return o.lat!=null?'<span class="ok">Ort gesetzt</span> · '+o.lat.toFixed(4)+', '+o.lon.toFixed(4):(o.ref?'Fällige Stelle bekannt, Pausenort wählen':(o.name?'Noch nicht gesucht':''));}
+function drawStations(){
+ fixLeg();var st=stationList(),h='';
+ st.forEach(function(s,i){
+  var o=s.o,lab=(i+1)+' · '+label(s),pick=!!stView(s),id='s-'+s.key;
+  h+='<div class="st '+vt(s)+'" id="st-'+s.key+'" data-idx="'+i+'"><div class="stl"><span class="tag lab">'+esc(lab)+'</span><span class="stat">'+statusOf(o)+'</span></div><div class="two"><div>';
+  if(s.k==='via')h+='<label for="'+id+'-type">Art</label><select id="'+id+'-type" data-f="type">'+Object.keys(VT).map(function(k){return '<option value="'+k+'"'+(o.type===k?' selected':'')+'>'+VT[k]+'</option>';}).join('')+'</select><div style="height:8px"></div>';
+  h+='<label for="'+id+'-name">'+(o.type==='hinweis'?'Ort oder Bezeichnung':'Ort suchen')+'</label><div class="line"><input type="text" id="'+id+'-name" data-f="name" value="'+esc(o.name)+'" placeholder="'+(s.k==='start'?'Startort, z. B. Sammelstelle':s.k==='ziel'?'Zielort':o.type==='pause'?'z. B. Autohof Regensburg Ost':o.type==='hinweis'?'z. B. Grenze Österreich':'Ort')+'"><button type="button" data-act="search">Suchen</button></div>';
+  if(o.type==='pause')h+='<div class="row" style="margin-top:6px"><span class="small" style="display:inline">In der Nähe:</span><button type="button" class="mini" data-near="Rastplatz">Rastplatz</button><button type="button" class="mini" data-near="Autohof">Autohof</button><button type="button" class="mini" data-near="Raststätte">Raststätte</button><button type="button" class="mini" data-near="Tankstelle">Tankstelle</button></div>';
+  h+='<div class="res"></div><div class="ex">';
+  if(i>0)h+='<div><label for="'+id+'-leg">km ab Station davor</label><input type="number" min="0" step="any" id="'+id+'-leg" data-f="leg" value="'+(num(S.legKm[i-1])?Math.round(num(S.legKm[i-1])*10)/10:'')+'"></div>';
+  if(s.k==='via'&&o.type!=='hinweis')h+='<div><label for="'+id+'-dwell">Aufenthalt (Min.)</label><input type="number" min="0" id="'+id+'-dwell" data-f="dwell" value="'+num(o.dwell)+'"></div>';
+  h+='</div><div style="margin-top:8px"><label for="'+id+'-addr">Adresse</label><input type="text" id="'+id+'-addr" data-f="addr" value="'+esc(o.addr||'')+'" placeholder="Straße, PLZ Ort"></div>';
+  h+='<div style="margin-top:8px"><label for="'+id+'-note">'+(o.type==='hinweis'?'Hinweis (z. B. GO-Box einschalten)':'Notiz (Zufahrt, Stellplätze, Funkkanal)')+'</label><input type="text" id="'+id+'-note" data-f="note" value="'+esc(o.note||'')+'"></div>';
+  if(s.k==='via')h+='<div class="row"><button type="button" class="mini" data-act="up" aria-label="Station nach oben">↑</button><button type="button" class="mini" data-act="down" aria-label="Station nach unten">↓</button><button type="button" class="mini" data-act="del">Entfernen</button></div>';
+  h+='</div><div>'+(pick?mapBox(s.key,true,'Karte '+lab)+'<span class="small" style="margin-top:4px">Klick in die Karte setzt den Ort, mit − zoomst du heraus. '+(o.ref?'„!“ markiert die Stelle, an der der Wechsel fällig ist.':'')+'</span>':'<div class="map"><span class="mapmsg">Nach der Ortswahl erscheint hier der Kartenausschnitt.</span></div>')+'</div></div></div>';
+ });
+ $('stations').innerHTML=h;
+ ensureMapsSoon();
+}
+function stOf(t){var r=t.closest('.st');return r?stationList()[+r.dataset.idx]:null;}
+function geoChanged(){S.route=null;S.teamRoutes={};}
+$('stations').addEventListener('input',function(e){
+ var t=e.target,f=t.dataset.f,s=stOf(t);if(!f||!s)return;var i=+t.closest('.st').dataset.idx;
+ if(f==='name'||f==='note'||f==='addr'){s.o[f]=t.value;touch('strecke');renderRoadbookSoon();return;}
+ if(f==='leg'){S.legKm[i-1]=num(t.value);geoChanged();touch('strecke','route');renderRoadbookSoon();return;}
+ if(f==='dwell'){s.o.dwell=num(t.value);touch('strecke');renderRoadbookSoon();return;}
+});
+$('stations').addEventListener('change',function(e){
+ var t=e.target,s=stOf(t);if(!s||t.dataset.f!=='type')return;
+ s.o.type=t.value;s.o.dwell=t.value==='hinweis'?0:(num(s.o.dwell)||dwellDef());touch('strecke');keepFocus(drawStations);drawTeams();renderRoadbook();
+});
+$('stations').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.dataset.f==='name'){e.preventDefault();searchStation(stOf(e.target),null);}});
+function setPoint(s,lat,lon,name){
+ if(C.on&&C.role!=='planer')return;
+ s.o.lat=Math.round(lat*1e6)/1e6;s.o.lon=Math.round(lon*1e6)/1e6;if(name!=null)s.o.name=name;else if(!s.o.name)s.o.name='Gewählter Punkt';
+ geoChanged();touch('strecke','route');drawStations();drawTeams();renderRoadbook();scheduleRoute();
+}
+$('stations').addEventListener('click',function(e){
+ var t=e.target,s=stOf(t);if(!s)return;
+ if(t.dataset.hit!=null){var d=t.closest('.res')._hits[+t.dataset.hit];if(!s.o.addr)s.o.addr=d.display_name.split(',').slice(1,4).join(',').trim();setPoint(s,+d.lat,+d.lon,shortName(d,s.k==='via'));return;}
+ if(t.dataset.near){searchStation(s,t.dataset.near);return;}
+ if(t.dataset.zoom){if(C.on&&C.role!=='planer')return;var v=stView(s);s.o.z=Math.max(5,Math.min(tsrc().max,v.z+(+t.dataset.zoom)));touch('strecke');ensureMaps();return;}
+ if(t.dataset.pick){if(C.on&&C.role!=='planer')return;var c=M[s.key];if(!c||!c.view)return;var r=t.getBoundingClientRect(),v2=c.view,cc=px(v2.lat,v2.lon,v2.z);
+  var q=ll(cc[0]-v2.w/2+(e.clientX-r.left)/r.width*v2.w,cc[1]-v2.h/2+(e.clientY-r.top)/r.height*v2.h,v2.z);setPoint(s,q[0],q[1],null);return;}
+ var a=t.dataset.act;if(!a)return;
+ if(a==='search'){searchStation(s,null);return;}
+ var v3=S.vias,j=s.i;
+ if(a==='del'){var key=s.key;v3.splice(j,1);S.legKm.splice(j,2,num(S.legKm[j])+num(S.legKm[j+1]));S.teams.forEach(function(tm){if(tm.ab===key)tm.ab='';});touch('fahrzeuge');}
+ else{var k=j+(a==='up'?-1:1);if(k<0||k>=v3.length)return;var tmp=v3[j];v3[j]=v3[k];v3[k]=tmp;S.legKm=[];}
+ geoChanged();touch('strecke','route');drawStations();drawTeams();renderRoadbook();
+});
+async function searchStation(s,near){
+ if(!s)return;var q=near||(s.o.name||'').trim(),idx=stationList().findIndex(function(x){return x.key===s.key;}),box=$('stations').querySelectorAll('.res')[idx];if(!q||!box)return;
+ var cc=!near&&parseCoord(q);if(cc){setPoint(s,cc[0],cc[1],'Punkt '+cc[0].toFixed(4)+', '+cc[1].toFixed(4));return;}
+ var c=s.o.ref?[s.o.ref.lat,s.o.ref.lon]:(s.o.lat!=null?[s.o.lat,s.o.lon]:null);
+ if(near&&!c){box.textContent='Für die Schnellsuche zuerst einen Ort wählen oder die Route berechnen.';return;}
+ box.textContent='Suche …';
+ try{var r=await nominatim(q,c,!!(near||(s.o.type==='pause'&&c)),near?8:5);
+  if(!r.length){box.textContent=near?'Kein „'+q+'“ im Umkreis von etwa 20 km gefunden. Zoom heraus und klick in die Karte, oder suche frei.':'Kein Treffer. Mit Land oder Region erneut suchen.';return;}
+  box._hits=r;box.innerHTML=hitsHtml(r,c);
+ }catch(e){box.innerHTML='<span class="err small">'+esc(netMsg(e))+'</span>';}
+}
+function newVia(type){return{id:rid(),type:type,name:'',lat:null,lon:null,dwell:type==='pause'?dwellDef():type==='hinweis'?0:30,note:'',addr:''};}
+function addVia(type){S.vias.push(newVia(type));S.legKm.splice(S.legKm.length-1,0,0);geoChanged();touch('strecke','route');drawStations();drawTeams();renderRoadbook();var v=S.vias[S.vias.length-1],el=$('st-v'+v.id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});}
+$('addpause').addEventListener('click',function(){addVia('pause');});
+$('addhalt').addEventListener('click',function(){addVia('halt');});
+$('addhinweis').addEventListener('click',function(){addVia('hinweis');});
+function insertPause(d){
+ var cum=stationsKm(),v=newVia('pause'),sk=Math.max(cum[d.after]+0.1,d.km-(num(S.speed)||70)/4),p=pointAt(sk);
+ if(p)v.ref={lat:Math.round(p[0]*1e5)/1e5,lon:Math.round(p[1]*1e5)/1e5};v.refKm=Math.round(sk);
+ S.vias.splice(d.after,0,v);
+ var a=d.km-cum[d.after],b=cum[d.after+1]-d.km;S.legKm.splice(d.after,1,Math.round(a*10)/10,Math.round(b*10)/10);
+ touch('strecke');drawStations();drawTeams();renderRoadbook();setTab('planung');
+ var el=$('st-v'+v.id);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});var inp=el.querySelector('input[data-f="name"]');if(inp)inp.focus({preventScroll:true});}
+}
+
+/* ---------- Route ---------- */
+var rTimer=null;
+function scheduleRoute(){clearTimeout(rTimer);if(netBlocked)return;if(stationList().some(function(s){return s.o.lat==null;}))return;rTimer=setTimeout(function(){runRoute();},1200);}
+function rmsg(html,cls){var m=$('rmsg');m.className='small '+(cls||'');m.innerHTML=html;}
+async function computeRoute(){
+ var st=stationList(),miss=st.filter(function(s){return s.o.lat==null;});
+ if(miss.length)throw new Error('Bitte für jede Station einen Ort wählen: '+miss.map(function(s){return (st.indexOf(s)+1)+' '+label(s);}).join(', ')+'.');
+ var r=await route2(st.map(function(s){return[s.o.lat,s.o.lon];}));
+ S.route={pts:r.pts,cum:r.cum,profile:r.profile,why:r.why};
+ S.legKm=r.legs.map(function(x){return Math.round(x*10)/10;});
+ var tr={},fails=0;
+ for(var i=0;i<S.teams.length;i++){var t=S.teams[i];if(!t.ab||!t.ziel||t.ziel.lat==null)continue;var a=st.find(function(s){return s.key===t.ab;});if(!a||a.o.lat==null)continue;
+  try{var q=await route2([[a.o.lat,a.o.lon],[t.ziel.lat,t.ziel.lon]]);tr[t.id]={pts:q.pts,cum:q.cum,km:Math.round(q.legs[0]*10)/10,profile:q.profile};}catch(e){fails++;}}
+ S.teamRoutes=tr;return fails;
+}
+async function runRoute(){
+ if(busy||(C.on&&C.role!=='planer'))return;busy=true;$('btnRoute').disabled=true;
+ try{rmsg('Route wird berechnet …');var f=await computeRoute();touch('strecke','route');drawStations();drawTeams();renderRoadbook();
+  var n=sched().dues.length;rmsg('<span class="ok">Route berechnet.</span> '+(n?n+' Fahrerwechsel noch ohne Pausenort, siehe unten.':'Alle Fahrerwechsel haben einen Pausenort.')+(f?' '+f+' Team-Weiterfahrten ließen sich nicht berechnen.':''));
+ }catch(e){rmsg(esc(/^Bitte/.test(e.message)?e.message:netMsg(e)),'err');}
+ busy=false;$('btnRoute').disabled=false;
+}
+$('btnRoute').addEventListener('click',function(){runRoute();});
+
+/* ---------- Teams ---------- */
+function teamById(id){return S.teams.find(function(t){return t.id===id;});}
+function drawTeams(){
+ var st=stationList(),opts=st.filter(function(s){return s.k==='via';});
+ $('tedit').innerHTML=S.teams.length?S.teams.map(function(t){var id='t-'+t.id,z=t.ziel||{};
+  return '<div class="team" data-team="'+t.id+'" style="border-left-color:'+esc(t.farbe)+'"><div class="ex" style="margin-top:0"><div><label for="'+id+'-n">Teamname</label><input id="'+id+'-n" data-f="name" value="'+esc(t.name)+'" placeholder="z. B. Team Sofia"></div>'
+  +'<div><label for="'+id+'-c">Farbe</label><input type="color" id="'+id+'-c" data-f="farbe" value="'+esc(t.farbe)+'"></div>'
+  +'<div><label for="'+id+'-ab">Konvoiteilung an</label><select id="'+id+'-ab" data-f="ab"><option value="">bleibt bis zum Ziel</option>'+opts.map(function(s){return '<option value="'+s.key+'"'+(t.ab===s.key?' selected':'')+'>'+(st.indexOf(s)+1)+' · '+esc(stName(s))+'</option>';}).join('')+'</select></div></div>'
+  +(t.ab?'<div style="margin-top:8px"><label for="'+id+'-z">Eigenes Ziel nach der Teilung</label><div class="line"><input id="'+id+'-z" data-f="ziel" value="'+esc(z.name||'')+'" placeholder="z. B. Warna"><button type="button" data-act="tsearch">Suchen</button></div><div class="res"></div><span class="small">'+(z.lat!=null?'<span class="ok">Ziel gesetzt</span> · '+z.lat.toFixed(4)+', '+z.lon.toFixed(4)+(S.teamRoutes[t.id]?' · '+kmf(S.teamRoutes[t.id].km)+' ab Teilung':' · Route berechnen'):'Ziel suchen oder Koordinaten eingeben')+'</span></div>':'')
+  +'<div style="margin-top:8px"><label for="'+id+'-h">Abschluss, Unterkunft oder Hinweise für dieses Team</label><input id="'+id+'-h" data-f="hinweis" value="'+esc(t.hinweis||'')+'" placeholder="z. B. Abschlussabend in Sofia, BG Hotel"></div>'
+  +'<div class="row"><button type="button" class="mini" data-act="tdel">Team entfernen</button></div></div>';}).join(''):'<p class="mute">Noch keine Teams. Ohne Teams fährt der ganze Konvoi gemeinsam zum Ziel.</p>';
+ drawFz();
+}
+function teamOf(t){var w=t.closest('[data-team]');return w?teamById(w.dataset.team):null;}
+$('tedit').addEventListener('input',function(e){var t=e.target,tm=teamOf(t),f=t.dataset.f;if(!tm||!f||f==='ab')return;
+ if(f==='ziel'){tm.ziel=Object.assign({},tm.ziel||{},{name:t.value});touch('fahrzeuge');return;}
+ tm[f]=t.value;if(f==='farbe'){t.closest('.team').style.borderLeftColor=t.value;ensureMapsSoon();}if(f==='name')drawFz();touch('fahrzeuge');renderRoadbookSoon();});
+$('tedit').addEventListener('change',function(e){var t=e.target,tm=teamOf(t);if(!tm||t.dataset.f!=='ab')return;tm.ab=t.value;delete S.teamRoutes[tm.id];touch('fahrzeuge','route');keepFocus(drawTeams);renderRoadbook();scheduleRoute();});
+$('tedit').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.dataset.f==='ziel'){e.preventDefault();teamSearch(teamOf(e.target),e.target.closest('.team'));}});
+$('tedit').addEventListener('click',function(e){var t=e.target,tm=teamOf(t);if(!tm)return;
+ if(t.dataset.act==='tdel'){S.teams=S.teams.filter(function(x){return x!==tm;});delete S.teamRoutes[tm.id];FZ.forEach(function(f){(S.fz[f[0]]||[]).forEach(function(o){if(o&&o.team===tm.id)o.team='';});});touch('fahrzeuge','route');drawTeams();renderRoadbook();return;}
+ if(t.dataset.act==='tsearch'){teamSearch(tm,t.closest('.team'));return;}
+ if(t.dataset.hit!=null){var d=t.closest('.res')._hits[+t.dataset.hit];tm.ziel={name:shortName(d,false),lat:+d.lat,lon:+d.lon};delete S.teamRoutes[tm.id];touch('fahrzeuge','route');drawTeams();renderRoadbook();scheduleRoute();}
+});
+async function teamSearch(tm,el){if(!tm)return;var q=(tm.ziel&&tm.ziel.name||'').trim(),box=el.querySelector('.res');if(!q)return;
+ var cc=parseCoord(q);if(cc){tm.ziel={name:'Punkt '+cc[0].toFixed(4)+', '+cc[1].toFixed(4),lat:cc[0],lon:cc[1]};delete S.teamRoutes[tm.id];touch('fahrzeuge','route');drawTeams();renderRoadbook();scheduleRoute();return;}
+ box.textContent='Suche …';try{var r=await nominatim(q,null,false,5);if(!r.length){box.textContent='Kein Treffer.';return;}box._hits=r;box.innerHTML=hitsHtml(r,null);}catch(e){box.innerHTML='<span class="err small">'+esc(netMsg(e))+'</span>';}}
+$('addteam').addEventListener('click',function(){S.teams.push({id:rid(),name:'',farbe:TCOL[S.teams.length%TCOL.length],ab:'',ziel:{name:'',lat:null,lon:null},hinweis:''});touch('fahrzeuge');drawTeams();renderRoadbook();});
+
+/* ---------- Fahrzeuge, Kontakte, Infos ---------- */
+function fzRows(){var out=[];FZ.forEach(function(t){var n=Math.max(0,Math.min(60,Math.floor(num(S[t[0]]))));if(!S.fz[t[0]])S.fz[t[0]]=[];for(var i=0;i<n;i++){if(!S.fz[t[0]][i])S.fz[t[0]][i]={ruf:'',kz:'',team:'',leiter:'',crew:''};out.push({t:t[0],lab:t[1]+' '+(i+1),i:i,o:S.fz[t[0]][i]});}});return out;}
+function drawFz(){
+ var r=fzRows();
+ $('fzedit').innerHTML=r.length?'<div class="scroll"><table class="ftab"><thead><tr><th>Fahrzeug</th><th>Rufname</th><th>Kennzeichen</th><th>Team</th><th>Tourleitung / Fahrer</th><th>Besatzung</th></tr></thead><tbody>'+r.map(function(x){var b=x.t+'-'+x.i,cur=x.o.team||'';
+  var to='<option value=""'+(cur===''?' selected':'')+'>ohne Team</option>'+S.teams.map(function(t){return '<option value="'+t.id+'"'+(cur===t.id?' selected':'')+'>'+esc(t.name||'Team ohne Namen')+'</option>';}).join('');
+  return '<tr data-t="'+x.t+'" data-i="'+x.i+'"><td>'+esc(x.lab)+'</td><td><input id="fr-'+b+'" data-f="ruf" value="'+esc(x.o.ruf)+'" placeholder="BUL 1" aria-label="Rufname '+esc(x.lab)+'" style="width:90px"></td><td><input class="kz" id="kz-'+b+'" data-f="kz" value="'+esc(x.o.kz)+'" placeholder="HU-AB 123" aria-label="Kennzeichen '+esc(x.lab)+'"></td><td><select id="ft-'+b+'" data-f="team" aria-label="Team '+esc(x.lab)+'">'+to+'</select></td><td><input id="fl-'+b+'" data-f="leiter" value="'+esc(x.o.leiter)+'" aria-label="Tourleitung '+esc(x.lab)+'"></td><td><input id="fc-'+b+'" data-f="crew" value="'+esc(x.o.crew)+'" placeholder="Namen, mit Komma getrennt" aria-label="Besatzung '+esc(x.lab)+'"></td></tr>';}).join('')+'</tbody></table></div>':'<p class="mute">Oben die Anzahl Pkw, Lkw und Reisebusse eintragen.</p>';
+}
+function fzSet(t){var tr=t.closest('tr');if(!tr||!t.dataset.f)return;var o=S.fz[tr.dataset.t][+tr.dataset.i];o[t.dataset.f]=t.dataset.f==='kz'?t.value.toUpperCase():t.value;touch('fahrzeuge');renderRoadbookSoon();}
+$('fzedit').addEventListener('input',function(e){if(e.target.tagName!=='SELECT')fzSet(e.target);});
+$('fzedit').addEventListener('change',function(e){if(e.target.tagName==='SELECT')fzSet(e.target);});
+function drawK(){
+ $('kedit').innerHTML=S.kontakte.map(function(k,i){
+  return '<div class="ex" data-k="'+i+'" style="margin-top:'+(i?'12':'0')+'px"><div><label for="kr'+i+'">Rolle</label><input id="kr'+i+'" data-f="rolle" value="'+esc(k.rolle)+'" placeholder="z. B. Teamleitung"></div><div><label for="kn'+i+'">Name</label><input id="kn'+i+'" data-f="name" value="'+esc(k.name)+'"></div><div><label for="kt'+i+'">Telefon</label><input id="kt'+i+'" type="tel" data-f="tel" value="'+esc(k.tel)+'" placeholder="+49 …"></div>'+(S.kontakte.length>1?'<div><button type="button" data-delk="'+i+'">Entfernen</button></div>':'')+'</div>';}).join('');
+}
+$('kedit').addEventListener('input',function(e){var t=e.target,w=t.closest('[data-k]');if(!w||!t.dataset.f)return;S.kontakte[+w.dataset.k][t.dataset.f]=t.value;touch('konvoi');renderRoadbookSoon();});
+$('kedit').addEventListener('click',function(e){var i=e.target.dataset.delk;if(i==null)return;S.kontakte.splice(+i,1);touch('konvoi');drawK();renderRoadbook();});
+$('addk').addEventListener('click',function(){S.kontakte.push({rolle:'',name:'',tel:''});touch('konvoi');drawK();renderRoadbook();});
+function drawInfos(){
+ $('iedit').innerHTML=S.infos.length?S.infos.map(function(x){return '<div class="infob" data-info="'+x.id+'"><label for="it-'+x.id+'">Titel</label><input id="it-'+x.id+'" data-f="titel" value="'+esc(x.titel)+'"><label for="ix-'+x.id+'" style="margin-top:8px">Text</label><textarea id="ix-'+x.id+'" data-f="text">'+esc(x.text)+'</textarea><div class="row"><button type="button" class="mini" data-act="idel">Entfernen</button></div></div>';}).join(''):'<p class="mute">Keine Infoseiten.</p>';
+}
+$('iedit').addEventListener('input',function(e){var t=e.target,w=t.closest('[data-info]');if(!w||!t.dataset.f)return;var x=S.infos.find(function(i){return i.id===w.dataset.info;});if(x){x[t.dataset.f]=t.value;touch('konvoi');}});
+$('iedit').addEventListener('click',function(e){if(e.target.dataset.act!=='idel')return;var w=e.target.closest('[data-info]');S.infos=S.infos.filter(function(i){return i.id!==w.dataset.info;});touch('konvoi');drawInfos();});
+$('addinfo').addEventListener('click',function(){S.infos.push({id:rid(),titel:'',text:''});touch('konvoi');drawInfos();});
+$('addinfotpl').addEventListener('click',function(){INFOS.forEach(function(x){S.infos.push({id:rid(),titel:x.titel,text:x.text});});touch('konvoi');drawInfos();});
+
+/* ---------- Roadbook anzeigen ---------- */
+var rbT=null;function renderRoadbookSoon(){clearTimeout(rbT);rbT=setTimeout(renderRoadbook,200);}
+function filledFz(x){var o=x.o;return !!(o.ruf||o.kz||o.leiter||o.crew||o.team);}
+function teamFz(id){return fzRows().filter(function(x){return (x.o.team||'')===id&&filledFz(x);});}
+function namedTeams(){return S.teams.filter(function(t){return (t.name||'').trim();});}
+function teamGroups(){return namedTeams().map(function(t){return{t:t,rows:teamFz(t.id)};}).concat([{t:null,rows:teamFz('')}]).filter(function(g){return g.t||g.rows.length;});}
+function renderRoadbook(){
+ var R=sched(),notes='',st=R.rows;
+ if(!S.date)notes+='<div class="info">Noch kein Abfahrtsdatum eingetragen. Die Zeiten gelten vorläufig ab heute'+(S.time?'':', 06:00 Uhr')+'.</div>';
+ if(!(R.total>0))notes+='<div class="note">Noch keine Strecke. In der Planung Ziel suchen und „Route berechnen“ wählen, oder Kilometer je Etappe eintragen.</div>';
+ if(R.dues.length)notes+='<div class="note">'+R.dues.length+' Fahrerwechsel noch ohne Pausenort. Die fälligen Stellen stehen in der Planung unter „Strecke und Pausenorte“.</div>';
+ if(S.route&&S.route.profile==='car')notes+='<div class="note">Die Route ist eine Pkw-Route, Lkw-Routing war nicht möglich ('+esc(S.route.why||'unbekannter Grund')+'). Lkw-Beschränkungen sind nicht berücksichtigt.</div>';
+ if(!S.route&&R.total>0)notes+='<div class="note">Kilometer stammen aus der Eingabe, nicht aus einer berechneten Route. Karten zeigen deshalb keine Streckenlinie.</div>';
+ if(R.sunday)notes+='<div class="note">Eine Station liegt auf einem Sonntag. Das Sonntagsfahrverbot für Lkw gilt in Deutschland und weiteren Ländern; Ausnahmegenehmigung für den Hilfskonvoi prüfen.</div>';
+ $('notes').innerHTML=notes;
+ var last=st[st.length-1],nl=num(S.lkw),fzN=nl+num(S.pkw)+num(S.bus);
+ $('sum').innerHTML='<div><b>'+kmf(R.total)+'</b><span>Strecke bis '+esc(S.ziel.name||'Ziel')+'</span></div><div><b>'+hm(R.drive)+'</b><span>Fahrzeit</span></div><div><b>'+hm(R.stand)+'</b><span>Standzeit</span></div>'
+  +'<div><b>'+(R.total>0?stamp(last.arr):'–')+'</b><span>Ankunft am Ziel</span></div><div><b>'+R.wc+'</b><span>Fahrerwechsel geplant</span></div>'
+  +(fzN?'<div><b>'+fzN+'</b><span>Fahrzeuge'+(nl&&num(S.fahrer)?', '+nl*num(S.fahrer)+' Lkw-Fahrer':'')+'</span></div>':'');
+ var ks=S.kontakte.filter(function(k){return k.name||k.tel;});
+ $('okontakt').innerHTML=ks.length?'<h3>Teamleitung und Ansprechpartner</h3><div class="kontakt">'+ks.map(function(k){return '<div><span class="tag">'+esc(k.rolle||'Ansprechpartner')+'</span><b>'+esc(k.name)+'</b><span class="tel">'+esc(k.tel)+'</span></div>';}).join('')+'</div>':'';
+ var groups=teamGroups();
+ $('oteams').innerHTML=groups.length?'<h3>Teams und Fahrzeuge</h3>'+groups.map(function(g){var t=g.t;
+  return '<div class="team" style="border-left-color:'+esc(t?t.farbe:'var(--line)')+'"><b>'+esc(t?(t.name||'Team ohne Namen'):(namedTeams().length?'Ohne Team':'Fahrzeuge'))+'</b>'+(t?'<span class="small">'+(t.ab?'Konvoiteilung an Station '+(stationList().findIndex(function(s){return s.key===t.ab;})+1)+', weiter nach '+esc(t.ziel&&t.ziel.name||'(Ziel offen)'):'bis '+esc(S.ziel.name||'Ziel'))+(t.hinweis?' · '+esc(t.hinweis):'')+'</span>':'')
+   +(g.rows.length?'<div class="scroll"><table style="margin-top:6px"><thead><tr><th>Rufname</th><th>Kennzeichen</th><th>Tourleitung</th><th>Besatzung</th></tr></thead><tbody>'+g.rows.map(function(x){return '<tr><td>'+esc(x.o.ruf||x.lab)+'</td><td><b>'+esc(x.o.kz||'–')+'</b></td><td>'+esc(x.o.leiter)+'</td><td>'+esc(x.o.crew)+'</td></tr>';}).join('')+'</tbody></table></div>':'<span class="small">Noch keine Fahrzeuge zugeordnet.</span>')+'</div>';}).join(''):'';
+ $('oov').innerHTML=(stationList().filter(function(s){return s.o.lat!=null;}).length>1)?'<h3>Übersicht</h3>'+mapBox('ov',false,'Übersichtskarte der Route'):'';
+ var h='';
+ st.forEach(function(r){
+  var s=r.s,splits=S.teams.filter(function(t){return t.ab===s.key;});
+  if(r.i>0&&r.legKm>0)h+='<div class="legline">'+kmf(r.legKm)+' · '+hm(r.legMin)+' Fahrzeit</div>';
+  h+='<div class="tli"><div><span class="tag">'+esc(label(s))+(r.dwell?' · '+Math.round(r.dwell)+' Min.':'')+'</span><span class="num">'+(r.i+1)+' · '+esc(stName(s))+'</span>'
+   +'<div class="times">'+(r.i&&isStop(s)?'<span>Ankunft</span><b>'+stamp(r.arr)+'</b>':'')+(r.i&&!isStop(s)?'<span>Durchfahrt</span><b>'+stamp(r.arr)+'</b>':'')+(s.k!=='ziel'&&isStop(s)?'<span>Abfahrt</span><b>'+stamp(r.dep)+'</b>':'')+'<span>km</span><b>'+kmf(r.km)+'</b>'
+   +(s.o.addr?'<span>Adresse</span><b style="font-weight:500">'+esc(s.o.addr)+'</b>':'')
+   +(s.o.lat!=null?'<span>Koord.</span><b>'+s.o.lat.toFixed(5)+', '+s.o.lon.toFixed(5)+' · <a href="https://www.openstreetmap.org/?mlat='+s.o.lat+'&mlon='+s.o.lon+'#map=16/'+s.o.lat+'/'+s.o.lon+'" target="_blank" rel="noopener">OSM</a></b>':'')+'</div>'
+   +(s.o.note?'<p style="margin:6px 0 0">'+esc(s.o.note)+'</p>':'')
+   +splits.map(function(t){return '<span class="split"><span class="swatch" style="background:'+esc(t.farbe)+'"></span>Konvoiteilung: '+esc(t.name||'Team')+' fährt weiter nach '+esc(t.ziel&&t.ziel.name||'(Ziel offen)')+'</span>';}).join('')
+   +r.warn.map(function(x){return '<span class="wn">'+esc(x)+'</span>';}).join('')+'</div>'
+   +'<div>'+(s.o.lat!=null?mapBox(s.key,false,'Karte '+label(s)):'')+'</div></div>';
+ });
+ $('tl').innerHTML=h;
+ $('obranch').innerHTML=R.branches.length?'<h3>Weiterfahrt der Teams</h3>'+R.branches.map(function(b){var t=b.team;
+  return '<div class="team" style="border-left-color:'+esc(t.farbe)+'"><div class="two"><div><b>'+esc(t.name||'Team')+'</b><div class="times"><span>Ab</span><b>'+esc(stName(b.row.s))+', '+stamp(b.row.dep)+'</b><span>Nach</span><b>'+esc(t.ziel&&t.ziel.name||'(Ziel offen)')+'</b><span>Strecke</span><b>'+(b.km?kmf(b.km)+' · '+hm(b.min):'noch nicht berechnet')+'</b>'+(b.km?'<span>Ankunft</span><b>'+stamp(b.arr)+'</b>':'')+'</div>'
+   +(t.hinweis?'<p style="margin:6px 0 0">'+esc(t.hinweis)+'</p>':'')+b.dues.map(function(d){return '<span class="wn">Fahrerwechsel spätestens nach '+kmf(d.km)+' ab Teilung (gegen '+stamp(d.time)+').</span>';}).join('')+'</div><div>'+(S.teamRoutes[t.id]?mapBox('tm'+t.id,false,'Karte Weiterfahrt '+(t.name||'')):'')+'</div></div></div>';}).join(''):'';
+ var dh='';
+ R.dues.forEach(function(d,j){
+  dh+='<div class="due"><div class="two"><div><span class="tag" style="color:var(--warn-ink)">Fahrerwechsel fällig</span><b>spätestens bei '+kmf(d.km)+'</b><span class="small">gegen '+stamp(d.time)+', zwischen Station '+(d.after+1)+' und '+(d.after+2)+'. Ohne Wechsel wären es '+hm(d.run)+' am Stück. Die Suche startet 15 Minuten vor dieser Stelle, damit der Pausenort vor der Grenze liegt.</span>'
+   +((!C.on||C.role==='planer')?'<div class="row"><button type="button" class="primary" data-due="'+j+'">Pausenort hier suchen</button></div>':'')+'</div><div>'+(S.route?mapBox('due'+j,false,'Karte der fälligen Stelle'):'<span class="small">Ohne berechnete Route gibt es für diese Stelle keinen Kartenausschnitt.</span>')+'</div></div></div>';
+ });
+ $('dues').innerHTML=dh?'<h3>Fällige Fahrerwechsel ohne Pausenort</h3>'+dh:'';
+ $('title').textContent='Roadbook Hinreise'+(S.name?' · '+S.name:'');
+ ensureMapsSoon();
+}
+$('dues').addEventListener('click',function(e){var j=e.target.dataset.due;if(j==null)return;var d=sched().dues[+j];if(d)insertPause(d);});
+
+/* ---------- Einstellungen ---------- */
+var FIELDS=['name','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus'];
+FIELDS.forEach(function(k){var el=$(k);el.addEventListener('input',function(){S[k]=el.type==='number'&&el.value!==''?num(el.value):el.value;touch('konvoi');if(k==='pkw'||k==='lkw'||k==='bus'){drawFz();touch('fahrzeuge');}renderRoadbookSoon();});});
+var TF=[['tw','weight'],['th','height'],['tb','width'],['tl','length']];
+TF.forEach(function(m){var el=$(m[0]);el.addEventListener('input',function(){S.truck[m[1]]=el.value===''?'':num(el.value);touch('konvoi');});});
+function fillFields(force){var a=force?null:document.activeElement;FIELDS.forEach(function(k){if($(k)!==a)$(k).value=S[k]==null?'':S[k];});TF.forEach(function(m){if($(m[0])!==a)$(m[0]).value=S.truck[m[1]]==null?'':S.truck[m[1]];});$('tiles').value=TS[P.tiles]?P.tiles:'carto';}
+$('tiles').addEventListener('change',function(){P.tiles=this.value;savePrefs();mapsFailed=false;ensureMaps();});
+$('btnMaps').addEventListener('click',function(){M={};tileCache={};mapsFailed=false;try{localStorage.removeItem(mapStoreKey());}catch(e){}ensureMaps();});
+
+/* ---------- PDF ---------- */
+var dlP=null;try{if(window.claude&&typeof window.claude.use==='function')dlP=window.claude.use('downloads').catch(function(){return null;});}catch(e){}
+var WAX='€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ',SUB={'ł':'l','Ł':'L','đ':'d','Đ':'D','ı':'i','→':'->','↓':'v','−':'-','ă':'a','Ă':'A','ș':'s','Ș':'S','ț':'t','Ț':'T','ş':'s','ţ':'t'};
+var CYR='А:A,Б:B,В:V,Г:G,Д:D,Е:E,Ж:Zh,З:Z,И:I,Й:Y,К:K,Л:L,М:M,Н:N,О:O,П:P,Р:R,С:S,Т:T,У:U,Ф:F,Х:H,Ц:Ts,Ч:Ch,Ш:Sh,Щ:Sht,Ъ:A,Ь:Y,Ю:Yu,Я:Ya'.split(',').reduce(function(o,p){var q=p.split(':');o[q[0]]=q[1];o[q[0].toLowerCase()]=q[1].toLowerCase();return o;},{});
+function wa(s){s=String(s==null?'':s);var o='';for(var ch of s){var c=ch.charCodeAt(0);
+ if((c>=32&&c<=126)||(c>=160&&c<=255)||WAX.indexOf(ch)>=0){o+=ch;continue;}
+ if(ch==='\n'||ch==='\t'||ch==='\r'){o+=' ';continue;}
+ if(SUB[ch]){o+=SUB[ch];continue;}if(CYR[ch]!=null){o+=CYR[ch];continue;}
+ var b=ch.normalize('NFD').replace(/[̀-ͯ]/g,'');o+=(b.length===1&&(b.charCodeAt(0)<127||(b.charCodeAt(0)>=160&&b.charCodeAt(0)<=255)))?b:'';}
+ return o;}
+function hexRgb(P0,h){h=String(h||'#555555').replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c;}).join('');var n=parseInt(h,16);if(isNaN(n))n=0x555555;return P0.rgb((n>>16&255)/255,(n>>8&255)/255,(n&255)/255);}
+async function buildPdf(opt){
+ opt=opt||{et:true,info:true,tank:true,notes:true};
+ var P0=window.PDFLib;if(!P0)throw new Error('PDF-Bibliothek nicht geladen.');
+ var R=sched(),doc=await P0.PDFDocument.create(),F=await doc.embedFont(P0.StandardFonts.Helvetica),B=await doc.embedFont(P0.StandardFonts.HelveticaBold);
+ var W=595.28,H=841.89,MG=40,CW=W-2*MG,ink=P0.rgb(0.07,0.12,0.1),mute=P0.rgb(0.36,0.43,0.4),lineC=P0.rgb(0.82,0.86,0.84),soft=P0.rgb(0.93,0.95,0.94),warn=P0.rgb(0.42,0.26,0),blue=P0.rgb(0.09,0.25,0.39),white=P0.rgb(1,1,1),page,y,usedMap=false,imgCache={};
+ doc.setTitle(wa('Roadbook '+(S.name||'')));doc.setCreator('Roadbook Weihnachtspäckchenkonvoi');
+ function np(){page=doc.addPage([W,H]);y=H-MG;}
+ function tx(s,x,yy,size,bold,col){var t=wa(s);if(t)page.drawText(t,{x:x,y:yy,size:size,font:bold?B:F,color:col||ink});}
+ function wrap(s,w,size,font){s=wa(s);var out=[],ln='';s.split(' ').forEach(function(word){
+  while(font.widthOfTextAtSize(word,size)>w&&word.length>1){var k=word.length;while(k>1&&font.widthOfTextAtSize(word.slice(0,k),size)>w)k--;if(ln){out.push(ln);ln='';}out.push(word.slice(0,k));word=word.slice(k);}
+  var t=ln?ln+' '+word:word;if(font.widthOfTextAtSize(t,size)>w){out.push(ln);ln=word;}else ln=t;});if(ln)out.push(ln);return out.length?out:[''];}
+ function need(h){if(y-h<MG+24)np();}
+ function para(s,size,bold,col,gap,indent,rp){indent=indent||0;var ls=wrap(s,CW-indent-(rp||0),size,bold?B:F);ls.forEach(function(l){need(size+4);tx(l,MG+indent,y-size,size,bold,col);y-=size+4;});y-=gap||0;}
+ function head(s){need(40);y-=8;tx(s,MG,y-13,13,true);y-=20;}
+ function eyebrow(s){tx(String(s).toUpperCase(),MG,y-9,9,true,mute);y-=16;}
+ function band(title,sub,col){page.drawRectangle({x:0,y:H-74,width:W,height:74,color:col});page.drawText(wa(title),{x:MG,y:H-50,size:24,font:B,color:white});if(sub){var ls=wrap(sub,CW,10,F);page.drawText(ls[0],{x:MG,y:H-66,size:10,font:F,color:white});}y=H-92;}
+ function table(cols,rows,o2){
+  o2=o2||{};var size=o2.size||9,lh=size+2.5;
+  function hdr(){need(lh+8);page.drawRectangle({x:MG,y:y-lh-5,width:CW,height:lh+5,color:soft});var x=MG;cols.forEach(function(c){tx(c.t,x+3,y-lh+1,8,true,mute);x+=c.w;});y-=lh+6;}
+  hdr();
+  rows.forEach(function(r){
+   if(r.leg){need(lh+2);tx(r.leg,MG+3,y-lh+2,8,false,mute);y-=lh+1;return;}
+   var cells=cols.map(function(c,ci){var v=r.cells[ci];var parts=Array.isArray(v)?v:[v];var ls=[];parts.forEach(function(p,pi){if(p==null||p==='')return;var bold=(pi===0&&c.bold)||(p&&p.b);var txt=p&&p.t!=null?p.t:p;wrap(txt,c.w-8,size,bold?B:F).forEach(function(l){ls.push({t:l,b:bold,c:p&&p.c});});});return ls;});
+   var nL=Math.max.apply(null,cells.map(function(c){return c.length||1;})),rh=nL*lh+6;
+   if(y-rh<MG+24){np();hdr();}
+   if(r.color)page.drawRectangle({x:MG,y:y-rh+2,width:3,height:rh-2,color:r.color});
+   var x=MG;cells.forEach(function(ls,ci){ls.forEach(function(l,li){tx(l.t,x+3+(ci===0&&r.color?4:0),y-lh*(li+1)+1,size,l.b,l.c==='w'?warn:(l.c==='m'?mute:(l.c==='i'?blue:ink)));});x+=cols[ci].w;});
+   y-=rh;page.drawLine({start:{x:MG,y:y+2},end:{x:MG+CW,y:y+2},thickness:0.5,color:lineC});
+  });
+  y-=6;
+ }
+ function fresh(key){var c=M[key],j=NEED[key];return c&&c.url&&j&&c.sig===j.sig?c:null;}
+ async function emb(key){var c=fresh(key);if(!c)return null;if(!imgCache[key])imgCache[key]=await doc.embedJpg(c.url);usedMap=true;return imgCache[key];}
+ async function img(key,maxH){var im=await emb(key);if(!im)return false;var w=CW,h=w*im.height/im.width;if(maxH&&h>maxH){h=maxH;w=h*im.width/im.height;}need(h+6);page.drawImage(im,{x:MG,y:y-h,width:w,height:h});y-=h+8;return true;}
+ async function imgAt(key,x,yy,w,h,cap){if(cap)tx(cap,x,yy+4,8,true,mute);page.drawRectangle({x:x,y:yy-h,width:w,height:h,color:soft});var im=await emb(key);if(im)page.drawImage(im,{x:x,y:yy-h,width:w,height:h});else tx('Karte nicht verfügbar',x+8,yy-h/2,8,false,mute);}
+ function vehTable(rows){table([{t:'Rufname',w:70,bold:true},{t:'Kennzeichen',w:90,bold:true},{t:'Tourleitung',w:120},{t:'Besatzung',w:235}],rows.map(function(x){return{cells:[x.o.ruf||x.lab,x.o.kz||'–',x.o.leiter,x.o.crew]};}));}
+ /* Titelseite */
+ np();var lgRp=0,lgBottom=H;
+ if(LOGO){try{var lg=await doc.embedPng(LOGO),lh=72,lw=lh*lg.width/lg.height;page.drawImage(lg,{x:W-MG-lw,y:H-MG-lh+6,width:lw,height:lh});lgRp=lw+14;lgBottom=H-MG-lh;}catch(e){}}
+ eyebrow('Roadbook');
+ para(S.name||'Weihnachtspäckchenkonvoi',22,true,ink,2,0,lgRp);
+ var first=R.rows[0],last=R.rows[R.rows.length-1];
+ para((S.start.name||'Start')+' nach '+(S.ziel.name||'Ziel offen')+(R.branches.length?', '+R.branches.length+' Konvoiteilung'+(R.branches.length>1?'en':''):''),12,false,ink,6,0,lgRp);
+ if(y>lgBottom-8)y=lgBottom-8;
+ table([{t:'Abfahrt',w:130},{t:'Ankunft am Ziel',w:130},{t:'Strecke',w:85},{t:'Fahrzeit',w:85},{t:'Standzeit',w:85}],
+  [{cells:[stamp(first.dep),R.total>0?stamp(last.arr):'–',kmf(R.total),hm(R.drive),hm(R.stand)]}]);
+ var ks=S.kontakte.filter(function(k){return k.name||k.tel;});
+ if(ks.length){head('Teamleitung und Ansprechpartner');table([{t:'Rolle',w:150},{t:'Name',w:185},{t:'Telefon',w:180,bold:true}],ks.map(function(k){return{cells:[k.rolle||'Ansprechpartner',k.name,k.tel]};}));}
+ var nt=namedTeams();
+ if(nt.length){head('Teams');table([{t:'Team',w:110,bold:true},{t:'Ziel',w:120},{t:'Konvoiteilung an',w:125},{t:'Fahrzeuge',w:160}],nt.map(function(t){var ab=t.ab?stationList().find(function(s){return s.key===t.ab;}):null;return{color:hexRgb(P0,t.farbe),cells:[t.name,t.ab?(t.ziel&&t.ziel.name||'offen'):(S.ziel.name||'Ziel'),ab?stName(ab):'–',teamFz(t.id).map(function(x){return (x.o.ruf||x.lab)+(x.o.kz?' ('+x.o.kz+')':'');}).join(', ')||'–']};}));}
+ var hints=[];
+ if(R.dues.length)hints.push(R.dues.length+' Fahrerwechsel noch ohne Pausenort: '+R.dues.map(function(d){return 'bei '+kmf(d.km)+' (gegen '+stamp(d.time)+')';}).join('; ')+'.');
+ if(S.route&&S.route.profile==='car')hints.push('Route als Pkw-Route berechnet, Lkw-Beschränkungen nicht berücksichtigt.');
+ if(R.sunday)hints.push('Eine Station liegt auf einem Sonntag: Lkw-Sonntagsfahrverbot und Ausnahmegenehmigung prüfen.');
+ if(hints.length){head('Hinweise');hints.forEach(function(h){para(h,9.5,false,warn,2);});}
+ if(fresh('ov')){head('Übersicht');await img('ov',330);}
+ /* Teams und Fahrzeuge */
+ var fr=fzRows();
+ var groups=teamGroups();
+ if(groups.length){np();eyebrow('Teams und Fahrzeuge');
+  for(var gi=0;gi<groups.length;gi++){var g=groups[gi],t=g.t;
+   need(60);page.drawRectangle({x:MG,y:y-16,width:6,height:16,color:t?hexRgb(P0,t.farbe):lineC});
+   tx(t?(t.name||'Team ohne Namen'):(namedTeams().length?'Ohne Team':'Fahrzeuge'),MG+12,y-13,13,true);y-=22;
+   if(t)para(t.ab?'Konvoiteilung an '+stName(stationList().find(function(s){return s.key===t.ab;})||{o:{}})+', weiter nach '+(t.ziel&&t.ziel.name||'(Ziel offen)'):'Fährt bis '+(S.ziel.name||'Ziel'),9,false,mute,t.hinweis?0:4);
+   if(t&&t.hinweis)para(t.hinweis,9,false,mute,4);
+   if(g.rows.length)vehTable(g.rows);else y-=4;
+  }
+ }
+ /* Zeitplan */
+ np();eyebrow('Zeitplan');
+ var rows=[];
+ R.rows.forEach(function(r){var s=r.s;
+  if(r.i>0&&r.legKm>0)rows.push({leg:kmf(r.legKm)+', '+hm(r.legMin)+' Fahrzeit'});
+  var sp=S.teams.filter(function(t){return t.ab===s.key;}).map(function(t){return{t:'Konvoiteilung: '+(t.name||'Team')+' weiter nach '+(t.ziel&&t.ziel.name||'?'),c:'i'};});
+  rows.push({cells:[String(r.i+1),r.i?stamp(r.arr):'–',s.k==='ziel'||!isStop(s)?'–':stamp(r.dep),
+   [{t:stName(s),b:true},{t:label(s)+(r.dwell?', '+Math.round(r.dwell)+' Min.':''),c:'m'},s.o.addr?{t:s.o.addr,c:'m'}:null,s.o.lat!=null?{t:s.o.lat.toFixed(5)+', '+s.o.lon.toFixed(5),c:'m'}:null],
+   kmf(r.km),[s.o.note?{t:s.o.note,c:s.o.type==='hinweis'?'i':null}:null].concat(sp,r.warn.map(function(w){return{t:w,c:'w'};}))]});
+ });
+ table([{t:'#',w:20},{t:'Ankunft',w:76},{t:'Abfahrt',w:76},{t:'Station',w:176},{t:'km',w:48},{t:'Hinweise',w:119}],rows);
+ if(R.branches.length){head('Weiterfahrt der Teams');table([{t:'Team',w:110,bold:true},{t:'Ab',w:140},{t:'Nach',w:110},{t:'Strecke',w:70},{t:'Ankunft',w:85}],R.branches.map(function(b){return{color:hexRgb(P0,b.team.farbe),cells:[b.team.name||'Team',[stName(b.row.s),{t:stamp(b.row.dep),c:'m'}],b.team.ziel&&b.team.ziel.name||'–',b.km?[kmf(b.km),{t:hm(b.min),c:'m'}]:'–',b.km?stamp(b.arr):'–']};}));}
+ /* Etappen */
+ if(opt.et){
+  for(var ei=0;ei<R.etappen.length;ei++){var e=R.etappen[ei],a=e.from,b=e.to,so=b.s.o;
+   np();band('Etappe '+(ei+1),stName(a.s)+'  >  '+stName(b.s),P0.rgb(0.11,0.36,0.27));
+   if(ks.length){para(ks.map(function(k){return (k.rolle?k.rolle+': ':'')+[k.name,k.tel].filter(Boolean).join(' ');}).join('   ·   '),8.5,true,mute,4);}
+   var colW=(CW-12)/2,x2=MG+colW+12,top=y;
+   var box=function(x,yy,lab,val,size){size=size||13;tx(String(lab).toUpperCase(),x,yy-8,7.5,true,mute);var ls=wrap(val,colW,size,B).slice(0,3);ls.forEach(function(l,li){tx(l,x,yy-10-(size+3)*(li+1)+3,size,true);});return 14+(size+3)*ls.length+8;};
+   var hl=box(MG,top,'Startpunkt',stName(a.s)),hr=box(x2,top,label(b.s),stName(b.s));
+   var y2=top-Math.max(hl,hr),yR=y2;
+   tx('ADRESSE UND KOORDINATEN',x2,yR-8,7.5,true,mute);yR-=22;
+   [so.addr||'',so.lat!=null?so.lat.toFixed(6)+', '+so.lon.toFixed(6):'',so.note||''].filter(Boolean).forEach(function(line){wrap(line,colW,9.5,F).forEach(function(l){tx(l,x2,yR,9.5,false);yR-=12;});});
+   y2-=box(MG,y2,'Strecke',kmf(e.km));y2-=box(MG,y2,'Fahrzeit','ca. '+hm(e.min));
+   y2-=box(MG,y2,'Abfahrt / Ankunft',stamp(a.dep)+'  /  '+stamp(b.arr),10.5);
+   y=Math.min(y2,yR-6);
+   var notes2=e.hints.map(function(h){return stName(h.s)+(h.s.o.note?': '+h.s.o.note:'');}).concat(e.splits.map(function(t){return 'Konvoiteilung: '+(t.name||'Team')+' fährt weiter nach '+(t.ziel&&t.ziel.name||'?');}));
+   if(b.dwell)notes2.push(label(b.s)+': '+Math.round(b.dwell)+' Min. Aufenthalt'+(isPause(b.s)?', Fahrerwechsel':''));
+   notes2.forEach(function(n){para('> '+n,10,true,blue,0);});y-=6;
+   var dh=colW*360/640,oh=Math.min(CW*360/640,y-MG-30-dh-40);
+   await imgAt('et'+ei,MG,y-12,CW,oh,'ÜBERSICHT');y-=oh+30;
+   await imgAt(a.s.key,MG,y-12,colW,dh,'DETAIL ABFAHRT');await imgAt(b.s.key,x2,y-12,colW,dh,'DETAIL ANKUNFT');y-=dh+24;
+  }
+  for(var bi=0;bi<R.branches.length;bi++){var br=R.branches[bi],t2=br.team;
+   np();band('Konvoiteilung',(t2.name||'Team')+' fährt weiter nach '+(t2.ziel&&t2.ziel.name||'?'),hexRgb(P0,t2.farbe));
+   table([{t:'Ab',w:170},{t:'Nach',w:150},{t:'Strecke',w:90},{t:'Ankunft',w:105}],[{cells:[[stName(br.row.s),{t:stamp(br.row.dep),c:'m'}],t2.ziel&&t2.ziel.name||'–',br.km?[kmf(br.km),{t:hm(br.min),c:'m'}]:'–',br.km?stamp(br.arr):'–']}]);
+   if(t2.hinweis)para(t2.hinweis,10,false,ink,4);
+   br.dues.forEach(function(d){para('Fahrerwechsel spätestens nach '+kmf(d.km)+' ab Teilung (gegen '+stamp(d.time)+')',9.5,false,warn,2);});
+   var tf=teamFz(t2.id);if(tf.length){head('Fahrzeuge');vehTable(tf);}
+   if(fresh('tm'+t2.id)){head('Strecke');await img('tm'+t2.id,330);}
+  }
+ }
+ /* Infoseiten */
+ if(opt.info){var inf=S.infos.filter(function(x){return x.titel||x.text;});
+  if(inf.length){np();eyebrow('Infos');
+   inf.forEach(function(x){if(x.titel)head(x.titel);String(x.text||'').split(/\r?\n/).forEach(function(l){var t=l.trim();if(!t){y-=4;return;}if(/^[-•*]\s+/.test(t))para('•  '+t.replace(/^[-•*]\s+/,''),10,false,ink,1,6);else para(t,10,false,ink,2);});y-=6;});}}
+ /* Tankprotokoll: ursprüngliche Tabelle, Zellen als Formularfelder */
+ if(opt.tank){
+  var form=doc.getForm(),noFill={borderWidth:0,font:F};
+  var veh=fr.length?fr:[{lab:'',o:{}},{lab:'',o:{}}];
+  var WAS=['D','B','A','M','S'],WAEH=['EUR','HUF','RON','RSD','CZK','PLN','MDL'],PAY=['Tankpool','DKV','bar','Org','Privat'];
+  var cols=[['Datum',44,'t'],['Tankgesellschaft',62,'t'],['Land',24,'t'],['Ort',62,'t'],['km-Stand',46,'t'],['Was',22,'d',WAS],['Menge',36,'t'],['Währ.',28,'d',WAEH],['Betrag',44,'t'],['Tankpool',29,'r'],['DKV',29,'r'],['bar',29,'r'],['Org.',29,'r'],['Privat',31,'r']];
+  var tot=cols.reduce(function(a,c){return a+c[1];},0),sc=CW/tot;cols.forEach(function(c){c[1]=c[1]*sc;});
+  var tfield=function(name,x,yy,w,h,size){var f=form.createTextField(name);f.addToPage(page,Object.assign({x:x,y:yy,width:w,height:h},noFill));f.setFontSize(size||7);return f;};
+  for(var vi=0;vi<veh.length;vi++){
+   if(vi%2===0){np();eyebrow('Tankprotokoll');}
+   var v=veh[vi],rowsN=13,rh=17,hh=26,pre='tank'+(vi+1)+'_';
+   tx('Tour: '+(S.name||'–'),MG,y-10,9,true);tx('Fahrzeug: '+(v.o.ruf||v.lab||'–'),MG+170,y-10,9,true);tx('Kennzeichen: '+(v.o.kz||'–'),MG+300,y-10,9,true);
+   y-=16;
+   tx('km Übernahme:',MG,y-10,9,false);var kx1=MG+F.widthOfTextAtSize('km Übernahme:',9)+4;page.drawLine({start:{x:kx1,y:y-12},end:{x:kx1+70,y:y-12},thickness:0.5,color:mute});tfield(pre+'km_uebernahme',kx1,y-12,70,12,9);
+   tx('km Abgabe:',MG+170,y-10,9,false);var kx2=MG+170+F.widthOfTextAtSize('km Abgabe:',9)+4;page.drawLine({start:{x:kx2,y:y-12},end:{x:kx2+70,y:y-12},thickness:0.5,color:mute});tfield(pre+'km_abgabe',kx2,y-12,70,12,9);
+   tx('Bezahlt mit',MG+CW-cols.slice(-5).reduce(function(a,c){return a+c[1];},0),y-10,8,true,mute);y-=16;
+   var x=MG;page.drawRectangle({x:MG,y:y-hh,width:CW,height:hh,color:soft});
+   cols.forEach(function(c){wrap(c[0],c[1]-3,7,B).forEach(function(l,li){tx(l,x+2,y-9-li*8,7,true,mute);});x+=c[1];});
+   var gy=y-hh-rowsN*rh;
+   for(var ri=0;ri<=rowsN+1;ri++){var yy=ri===0?y:y-hh-(ri-1)*rh;page.drawLine({start:{x:MG,y:yy},end:{x:MG+CW,y:yy},thickness:ri<=1?0.8:0.4,color:ri<=1?mute:lineC});}
+   x=MG;for(var ci=0;ci<=cols.length;ci++){page.drawLine({start:{x:x,y:y},end:{x:x,y:gy},thickness:0.4,color:lineC});if(ci<cols.length)x+=cols[ci][1];}
+   for(var rr=1;rr<=rowsN;rr++){
+    var bottom=y-hh-rr*rh,rg=null;x=MG;
+    for(var cc=0;cc<cols.length;cc++){var c=cols[cc],nm=pre+'z'+rr+'_'+c[0].replace(/[^A-Za-z]/g,'');
+     if(c[2]==='t')tfield(nm,x+1,bottom+1,c[1]-2,rh-2,7);
+     else if(c[2]==='d'){var dd=form.createDropdown(nm);dd.addOptions(c[3]);dd.addToPage(page,Object.assign({x:x+1,y:bottom+1,width:c[1]-2,height:rh-2},noFill));dd.setFontSize(7);}
+     else{if(!rg)rg=form.createRadioGroup(pre+'z'+rr+'_bezahlt');var bw=8;rg.addOptionToPage(PAY[cc-9],page,{x:x+(c[1]-bw)/2,y:bottom+(rh-bw)/2,width:bw,height:bw,borderWidth:0.5,borderColor:lineC});}
+     x+=c[1];}
+   }
+   y=gy-10;tx('Land: D, A, HU, RO, BG, PL …   Was: D Diesel, B Benzin, A AdBlue, M Maut, S Sonstiges   Währung: EUR, HUF, RON, RSD, CZK, PLN',MG,y,7,false,mute);y-=26;
+  }
+  form.updateFieldAppearances(F);
+ }
+ /* Notizen */
+ if(opt.notes){np();eyebrow('Notizen');for(var ln=y-20;ln>MG+30;ln-=24)page.drawLine({start:{x:MG,y:ln},end:{x:MG+CW,y:ln},thickness:0.5,color:lineC});}
+ var pages=doc.getPages(),pn=pages.length;
+ pages[pn-1].drawText(wa('Roadbook-Tool: Björn Schirmer · Rückfragen und Verbesserungswünsche: bjoern.schirmer@wpk-ggmbh.de · 0173-7600974'),{x:MG,y:34,size:7.5,font:F,color:mute});
+ pages.forEach(function(pg,i){var s1='Seite '+(i+1)+' von '+pn;pg.drawText(wa(s1),{x:W-MG-F.widthOfTextAtSize(s1,8),y:22,size:8,font:F,color:mute});
+  pg.drawText(wa('Roadbook'+(S.name?' · '+S.name:'')+(usedMap?'  ·  Karten '+tsrc().a:'')),{x:MG,y:22,size:8,font:F,color:mute});});
+ return await doc.save();
+}
+function pmsgOut(html,cls){var m=$('pdfmsg');m.className='small '+(cls||'');m.innerHTML=html;}
+$('btnPdf').addEventListener('click',async function(){
+ var b=$('btnPdf');b.disabled=true;pmsgOut('PDF wird erstellt, Karten werden vorbereitet …');
+ try{
+  if(!mapsFailed){var to=new Promise(function(r){setTimeout(r,45000);});await Promise.race([ensureMaps()||Promise.resolve(),to]);if(mapQ)await Promise.race([mapQ,to]);}
+  var bytes=await buildPdf({et:$('pdfEt').checked,info:$('pdfInfo').checked,tank:$('pdfTank').checked,notes:$('pdfNotes').checked}),blob=new Blob([bytes],{type:'application/pdf'});
+  var fn='Roadbook-'+((S.name||'Konvoi').replace(/[^\wäöüÄÖÜß-]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')||'Konvoi')+(S.date?'-'+S.date:'')+'.pdf';
+  var dl=dlP?await dlP:null;
+  if(dl){try{await dl.save({filename:fn,data:blob});pmsgOut('<span class="ok">PDF gespeichert.</span>');}
+   catch(e){var c=e&&e.code;pmsgOut(c==='declined'?'Speichern abgebrochen.':c==='rate_limited'?'Ein Speichern-Dialog ist schon offen.':'Download ist in dieser Ansicht nicht möglich.',c==='declined'?'':'err');}}
+  else{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},4000);
+   pmsgOut('<span class="ok">PDF erstellt.</span> '+esc(fn)+' ('+Math.round(bytes.length/1024)+' KB)');}
+ }catch(e){pmsgOut('PDF konnte nicht erstellt werden: '+esc(e.message||e),'err');}
+ b.disabled=false;
+});
+
+/* ---------- Päckchen ---------- */
+function G(s){s=String(s).toLowerCase();return /m[äa]dchen|girl/.test(s)?'m':/unisex|neutral|divers/.test(s)?'u':/jung|boy/.test(s)?'j':null;}
+function A(s){s=String(s).toLowerCase();return /kindergarten|kita|vorschul|5\s*[-–]\s*7/.test(s)?'k':/grundschul|7\s*[-–]\s*10/.test(s)?'g':/teen|jugend|10\s*[-–]\s*15/.test(s)?'t':null;}
+function N(c){if(typeof c==='number')return c;var n=Number(String(c).trim().replace(/\s/g,'').replace(',','.'));return isNaN(n)||String(c).trim()===''?null:n;}
+function parseRows(rows){
+ var res={},cols=null,total=0;
+ function put(g,a,n){if(g&&a&&n){res[g+a]=(res[g+a]||0)+n;total+=n;}}
+ rows.forEach(function(r){
+  var m={},c=0;
+  r.forEach(function(cell,i){if(typeof cell!=='number'&&G(cell)){m[i]={g:G(cell),a:A(cell)};c++;}});
+  if(c>=2&&!r.some(function(x){return typeof x==='number';})){cols=m;return;}
+  if(/summe|gesamt|total/i.test(String(r[0])))return;
+  if(cols){var ra=null;r.forEach(function(x){if(!ra&&typeof x!=='number')ra=A(x);});
+   for(var i in cols){var n=N(r[i]);if(n!==null)put(cols[i].g,cols[i].a||ra,n);}}
+  else{var g=null,a=null,n2=null;r.forEach(function(x){if(typeof x!=='number'){g=g||G(x);a=a||A(x);}var v=N(x);if(typeof x==='number'||(v!==null&&!/[-–]/.test(String(x))))n2=v;});put(g,a,n2);}
+ });
+ return{res:res,total:total};
+}
+function csvRows(t){var f=t.split(/\r?\n/)[0]||'',d=(f.split(';').length>f.split(',').length)?';':(f.indexOf('\t')>-1?'\t':',');
+ return t.split(/\r?\n/).filter(Boolean).map(function(l){return l.split(d).map(function(x){return x.replace(/^"|"$/g,'').trim();});});}
+function done(rows,name){
+ var p=parseRows(rows);
+ if(!p.total){$('pmsg').textContent='In „'+name+'“ konnte ich keine Zuordnung erkennen. Bestand unten von Hand eintragen.';return;}
+ S.bestand=p.res;touch('bestand');drawBest();calcPk();
+ $('pmsg').innerHTML='<span class="ok">'+p.total+' Päckchen aus „'+esc(name)+'“ eingelesen.</span> Bitte kurz kontrollieren.';
+}
+$('file').addEventListener('change',function(e){
+ var f=e.target.files[0];if(!f)return;var rd=new FileReader(),txt=/\.(csv|txt)$/i.test(f.name);
+ rd.onload=function(){try{
+  if(txt)done(csvRows(rd.result),f.name);
+  else{if(typeof XLSX==='undefined'){$('pmsg').textContent='Excel-Import nicht verfügbar. Bitte als CSV speichern.';return;}
+   var wb=XLSX.read(rd.result,{type:'array'}),rows=[];
+   wb.SheetNames.forEach(function(n){rows=rows.concat(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''}));});done(rows,f.name);}
+ }catch(x){$('pmsg').textContent='Datei konnte nicht gelesen werden.';}};
+ if(txt)rd.readAsText(f);else rd.readAsArrayBuffer(f);
+});
+function grid(attr,id,vals){
+ var h='<table class="pt"><tr><th></th>'+SX.map(function(x){return '<th>'+x[1]+'</th>';}).join('')+'</tr>';
+ AG.forEach(function(a){h+='<tr><th>'+a[1]+'</th>'+SX.map(function(x){var k=x[0]+a[0];
+  return '<td><input type="number" min="0" id="'+attr+'-'+(id!=null?id+'-':'')+k+'" aria-label="'+x[1]+' '+a[1]+'" '+attr+'="'+k+'"'+(id!=null?' data-id="'+id+'"':'')+' value="'+(num(vals[k])||'')+'"></td>';}).join('')+'</tr>';});
+ return h+'</table>';
+}
+function drawBest(){$('best').innerHTML='<div class="scroll">'+grid('data-b',null,S.bestand)+'</div>';}
+$('best').addEventListener('input',function(e){var k=e.target.dataset.b;if(!k)return;S.bestand[k]=num(e.target.value);touch('bestand');calcPk();});
+function lkwOpts(sel){return '<option value="">ohne Stellplatz</option>'+lkwList().map(function(x){return '<option value="'+lkwKey(x)+'"'+(sel===lkwKey(x)?' selected':'')+'>'+esc(lkwName(x))+'</option>';}).join('');}
+function abgWarn(a){if(!a.lkw||!num(a.platz))return '';var st=palStats(a.lkw,num(a.platz)),bad=[];SX.forEach(function(x){AG.forEach(function(g){var k=x[0]+g[0];if(num(a.pk[k])&&num(st.ld[k])-num(st.u[k])<0)bad.push(x[1]+' '+g[1].split(' ')[0]);});});
+ return bad.length?'<span class="wn">Mehr abgegeben, als auf Stellplatz '+num(a.platz)+' geladen ist: '+esc(bad.join(', '))+'.</span>':'';}
+function drawAbg(){
+ var h='',hasL=lkwList().length;
+ S.abgaben.forEach(function(a){
+  h+='<div class="abg" data-id="'+a.id+'"><div class="line3"><label>Ort<input list="ortliste" id="ao-'+a.id+'" data-f="ort" value="'+esc(a.ort)+'" placeholder="Wo abgegeben"></label><label>Datum<input type="date" id="ad-'+a.id+'" data-f="datum" value="'+esc(a.datum)+'"></label><button type="button" data-act="delabg">Entfernen</button></div>'
+  +(hasL?'<div class="src"><label>Von Lkw<select id="al-'+a.id+'" data-f="lkw">'+lkwOpts(a.lkw||'')+'</select></label><label>Stellplatz<input type="number" min="1" max="'+PL+'" id="ap-'+a.id+'" data-f="platz" value="'+(num(a.platz)||'')+'"'+(a.lkw?'':' disabled')+'></label></div>':'')
+  +'<div class="scroll">'+grid('data-p',a.id,a.pk||{})+'</div><div class="awarn">'+abgWarn(a)+'</div>'+(a.von?'<span class="small">erfasst von '+esc(C.members[String(a.von).toLowerCase()]||a.von)+'</span>':'')+'</div>';
+ });
+ $('abglist').innerHTML=h||'<p class="mute">Noch keine Abgabe erfasst.</p>';
+ var names=[];if(S.ziel.name)names.push(S.ziel.name);S.teams.forEach(function(t){if(t.ziel&&t.ziel.name&&names.indexOf(t.ziel.name)<0)names.push(t.ziel.name);});S.abgaben.forEach(function(a){if(a.ort&&names.indexOf(a.ort)<0)names.push(a.ort);});
+ $('ortliste').innerHTML=names.map(function(n){return '<option value="'+esc(n)+'">';}).join('');
+}
+function abgOf(t){var w=t.closest('.abg');if(!w)return null;var id=w.dataset.id;return S.abgaben.find(function(a){return a.id===id;});}
+$('abglist').addEventListener('input',function(e){var t=e.target,a=abgOf(t);if(!a)return;var f=t.dataset.f;
+ if(t.dataset.p)a.pk[t.dataset.p]=num(t.value);
+ else if(f==='platz'){var n=Math.round(num(t.value));a.platz=n>=1&&n<=PL?n:'';}
+ else if(f==='lkw'){a.lkw=t.value;if(!a.lkw)a.platz='';var pi=t.closest('.abg').querySelector('[data-f="platz"]');if(pi){pi.disabled=!a.lkw;if(!a.lkw)pi.value='';}}
+ else if(f)a[f]=t.value;
+ touch('abgabe:'+a.id);var w=t.closest('.abg').querySelector('.awarn');if(w)w.innerHTML=abgWarn(a);calcPk();drawPalView();});
+$('abglist').addEventListener('click',function(e){if(e.target.dataset.act!=='delabg')return;var a=abgOf(e.target);if(!a)return;S.abgaben=S.abgaben.filter(function(x){return x!==a;});touch('abgabe:'+a.id);drawAbg();calcPk();drawPalView();});
+$('addabg').addEventListener('click',function(){var a={id:rid(),ort:S.ziel.name||'',datum:new Date().toISOString().slice(0,10),pk:{},von:C.user?C.user.email:''};S.abgaben.push(a);touch('abgabe:'+a.id);drawAbg();calcPk();});
+/* ---------- Ladeplan ---------- */
+var PL=33,PR=3,selL='',selP=0;
+function lkwList(){return fzRows().filter(function(x){return x.t==='lkw';});}
+function lkwKey(x){return 'lkw'+x.i;}
+function lkwName(x){return (x.o.ruf||x.lab)+(x.o.kz?' · '+x.o.kz:'');}
+function palGet(lk,p){var L=S.paletten[lk];return L&&L[p]&&L[p].pk?L[p].pk:{};}
+function palUsed(lk,p){var u={};S.abgaben.forEach(function(a){if(a.lkw===lk&&num(a.platz)===p)for(var k in a.pk)u[k]=(u[k]||0)+num(a.pk[k]);});return u;}
+function palStats(lk,p){var ld=palGet(lk,p),u=palUsed(lk,p),t=sumObj(ld),ab=sumObj(u);return{ld:ld,u:u,tot:t,ab:ab,rem:t-ab};}
+function palAll(){var o={};lkwList().forEach(function(x){var L=S.paletten[lkwKey(x)]||{};for(var p in L){var pk=L[p].pk||{};for(var k in pk)o[k]=(o[k]||0)+num(pk[k]);}});return o;}
+function loadedByCat(){return sumObj(S.bestand)?S.bestand:palAll();}
+function palEditable(){return !C.on||C.role==='planer';}
+function drawLadeplan(){
+ var host=$('ladeplan');if(!host)return;var L=lkwList();
+ if(!L.length){host.innerHTML='<p class="mute">Unter „Planung“ die Anzahl der Lkw eintragen. Dann erscheint hier der Ladeplan je Auflieger.</p>';return;}
+ if(!L.some(function(x){return lkwKey(x)===selL;}))selL=lkwKey(L[0]);
+ host.innerHTML='<div class="lkwsel" role="group" aria-label="Lkw wählen">'+L.map(function(x){var k=lkwKey(x);return '<button type="button" data-lkw="'+k+'" aria-pressed="'+(k===selL)+'">'+esc(lkwName(x))+'</button>';}).join('')+'</div>'
+  +'<div class="sum" id="palsum"></div><div class="ladeplan" id="palsvg"></div><div id="paled"></div>';
+ drawPalView();drawPalEditor();
+}
+function drawPalView(){
+ if(!$('palsvg'))return;var lk=selL,G='',tl=0,tu=0,used=0;
+ var X0=150,Y0=46,PW=95,PH=64,GAP=4,TW=1170,TH=PR*PH+(PR+1)*GAP;
+ G+='<text x="'+(X0)+'" y="24" font-size="22" font-weight="700">Sattelzug mit Auflieger 13,60 m</text>';
+ G+='<rect x="40" y="'+(Y0+26)+'" width="78" height="'+(TH-52)+'" rx="12" fill="var(--cab)"/><rect x="50" y="'+(Y0+38)+'" width="16" height="'+(TH-76)+'" rx="4" fill="#b7c6d6"/>';
+ G+='<rect x="'+X0+'" y="'+Y0+'" width="'+TW+'" height="'+TH+'" rx="4" fill="var(--surface)" stroke="var(--ink)" stroke-width="3"/>';
+ var hx=X0+11*(PW+GAP)+GAP;G+='<defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="var(--mute)" stroke-width="1.5"/></pattern></defs>';
+ G+='<rect x="'+hx+'" y="'+(Y0+2)+'" width="'+(X0+TW-hx-2)+'" height="'+(TH-4)+'" fill="url(#hatch)" opacity=".5"/><text x="'+(X0+TW)+'" y="'+(Y0-8)+'" font-size="15" text-anchor="end" style="fill:var(--mute)">0,40 m frei</text>';
+ for(var c=0;c<11;c++)for(var r=0;r<PR;r++){
+  var p=c*PR+r+1,st=palStats(lk,p),x=X0+GAP+c*(PW+GAP),y=Y0+GAP+r*(PH+GAP),ratio=st.tot?Math.max(0,st.rem)/st.tot:0;
+  tl+=st.tot;tu+=st.ab;if(st.tot)used++;
+  var neg=st.rem<0||Object.keys(st.u).some(function(k){return num(st.u[k])>num(st.ld[k]);});
+  G+='<g class="pp'+(p===selP?' sel':'')+'" data-platz="'+p+'" tabindex="0" role="button" aria-label="Stellplatz '+p+': '+st.rem+' von '+st.tot+' Päckchen verfügbar"><title>Stellplatz '+p+': '+st.rem+' verfügbar ('+st.tot+' geladen, '+st.ab+' abgegeben)</title>'
+   +'<rect class="cell" x="'+x+'" y="'+y+'" width="'+PW+'" height="'+PH+'" rx="5" fill="'+(st.tot?'var(--pal)':'var(--soft)')+'" fill-opacity="'+(st.tot?(0.18+0.82*ratio).toFixed(2):1)+'" stroke="'+(neg?'var(--crit)':(st.tot?'#8d6a33':'var(--line)'))+'" stroke-width="'+(neg?3:1.5)+'"/>'
+   +'<line x1="'+(x+PW/3)+'" y1="'+(y+4)+'" x2="'+(x+PW/3)+'" y2="'+(y+PH-4)+'" stroke="#8d6a33" stroke-opacity=".25"/><line x1="'+(x+2*PW/3)+'" y1="'+(y+4)+'" x2="'+(x+2*PW/3)+'" y2="'+(y+PH-4)+'" stroke="#8d6a33" stroke-opacity=".25"/>'
+   +'<text x="'+(x+6)+'" y="'+(y+15)+'" font-size="12" font-weight="600" style="fill:var(--mute)">'+p+'</text>'
+   +(st.tot?'<text x="'+(x+PW/2)+'" y="'+(y+PH/2+9)+'" font-size="24" font-weight="700" text-anchor="middle"'+(neg?' style="fill:var(--crit)"':'')+'>'+st.rem+'</text><text x="'+(x+PW-6)+'" y="'+(y+PH-6)+'" font-size="11" text-anchor="end" style="fill:var(--mute)">von '+st.tot+'</text>':'<text x="'+(x+PW/2)+'" y="'+(y+PH/2+6)+'" font-size="13" text-anchor="middle" style="fill:var(--mute)">leer</text>')+'</g>';
+ }
+ G+='<line x1="'+X0+'" y1="'+(Y0+TH+24)+'" x2="'+(X0+TW)+'" y2="'+(Y0+TH+24)+'" stroke="var(--mute)"/><line x1="'+X0+'" y1="'+(Y0+TH+16)+'" x2="'+X0+'" y2="'+(Y0+TH+32)+'" stroke="var(--mute)"/><line x1="'+(X0+TW)+'" y1="'+(Y0+TH+16)+'" x2="'+(X0+TW)+'" y2="'+(Y0+TH+32)+'" stroke="var(--mute)"/><text x="'+(X0+TW/2)+'" y="'+(Y0+TH+50)+'" font-size="15" text-anchor="middle" style="fill:var(--mute)">13,60 m</text>';
+ $('palsvg').innerHTML='<svg viewBox="0 0 1340 '+(Y0+TH+60)+'" role="img" aria-label="Ladeplan Auflieger mit 33 Stellplätzen">'+G+'</svg>';
+ $('palsum').innerHTML='<div><b>'+tl+'</b><span>auf diesem Lkw geladen</span></div><div><b>'+tu+'</b><span>davon abgegeben</span></div><div><b class="'+(tl-tu<0?'neg':'')+'">'+(tl-tu)+'</b><span>noch verfügbar</span></div><div><b>'+used+' / '+PL+'</b><span>Stellplätze belegt</span></div>';
+}
+function drawPalEditor(){
+ var ed=$('paled');if(!ed)return;
+ if(!selP){ed.innerHTML='<p class="small">Stellplatz in der Grafik anklicken, um festzulegen, welche Päckchen darauf stehen.</p>';return;}
+ var st=palStats(selL,selP),dis=palEditable()?'':' disabled',x=lkwList().find(function(v){return lkwKey(v)===selL;});
+ var h='<div class="palx"><div class="stl"><b>Stellplatz '+selP+(x?' · '+esc(lkwName(x)):'')+'</b><button type="button" class="mini" data-act="palclose">Schließen</button></div>';
+ h+='<div class="scroll"><table class="pt"><tr><th></th>'+SX.map(function(v){return '<th>'+v[1]+'</th>';}).join('')+'</tr>';
+ AG.forEach(function(a){h+='<tr><th>'+a[1]+'</th>'+SX.map(function(v){var k=v[0]+a[0],l=num(st.ld[k]),u=num(st.u[k]),r=l-u;
+  return '<td><input type="number" min="0" id="pal-'+k+'" data-pal="'+k+'" aria-label="Geladen '+v[1]+' '+a[1]+'" value="'+(l||'')+'"'+dis+'><small class="'+(r<0?'neg':'')+'">'+(u?r+' verfügbar, '+u+' abgegeben':(l?l+' verfügbar':''))+'</small></td>';}).join('')+'</tr>';});
+ h+='</table></div>';
+ var ab=S.abgaben.filter(function(a){return a.lkw===selL&&num(a.platz)===selP;});
+ h+='<p class="small" style="margin-top:8px">'+(palEditable()?'In die Felder trägst du ein, wie viele Päckchen geladen sind. ':'')+(ab.length?'Abgaben von diesem Stellplatz: '+ab.map(function(a){return esc((a.datum||'')+' '+(a.ort||''))+' ('+sumObj(a.pk)+')';}).join(', '):'Noch keine Abgabe von diesem Stellplatz.')+'</p>';
+ h+='<div class="row"><button type="button" class="primary" data-act="palabg">Abgabe von Stellplatz '+selP+' erfassen</button></div></div>';
+ ed.innerHTML=h;
+}
+$('ladeplan').addEventListener('click',function(e){
+ var t=e.target,b=t.closest('[data-lkw]');if(b){selL=b.dataset.lkw;selP=0;drawLadeplan();return;}
+ var g=t.closest('[data-platz]');if(g){selP=+g.dataset.platz;drawPalView();drawPalEditor();return;}
+ if(t.dataset.act==='palclose'){selP=0;drawPalView();drawPalEditor();return;}
+ if(t.dataset.act==='palabg'){var a={id:rid(),ort:S.ziel.name||'',datum:new Date().toISOString().slice(0,10),pk:{},von:C.user?C.user.email:'',lkw:selL,platz:selP};S.abgaben.push(a);touch('abgabe:'+a.id);drawAbg();calcPk();var el=document.querySelector('.abg[data-id="'+a.id+'"]');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});var f=el.querySelector('input[data-p]');if(f)f.focus({preventScroll:true});}}
+});
+$('ladeplan').addEventListener('keydown',function(e){var g=e.target.closest&&e.target.closest('[data-platz]');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selP=+g.dataset.platz;drawPalView();drawPalEditor();var n=document.querySelector('#palsvg [data-platz="'+selP+'"]');if(n)n.focus();}});
+$('ladeplan').addEventListener('input',function(e){var k=e.target.dataset.pal;if(!k||!selP||!palEditable())return;
+ var L=S.paletten[selL]||(S.paletten[selL]={}),P=L[selP]||(L[selP]={pk:{}});P.pk[k]=num(e.target.value);
+ touch('bestand');drawPalView();calcPk();var st=palStats(selL,selP),l=num(st.ld[k]),u=num(st.u[k]),sm=e.target.nextElementSibling;if(sm){sm.textContent=u?(l-u)+' verfügbar, '+u+' abgegeben':(l?l+' verfügbar':'');sm.className=l-u<0?'neg':'';}});
+function calcPk(){
+ var used={};S.abgaben.forEach(function(a){for(var k in a.pk)used[k]=(used[k]||0)+num(a.pk[k]);});
+ var best=loadedByCat(),tot=sumObj(best),ab=sumObj(used),rem=tot-ab,pt=sumObj(palAll()),nz=tot-pt;
+ $('psum').innerHTML='<div><b>'+tot+'</b><span>geladen'+(sumObj(S.bestand)?'':(pt?' (aus dem Ladeplan)':''))+'</span></div><div><b>'+ab+'</b><span>abgegeben in '+S.abgaben.length+' Abgaben</span></div><div><b class="'+(rem<0?'neg':'')+'">'+rem+'</b><span>noch an Bord</span></div>'
+  +(pt?'<div><b>'+pt+'</b><span>auf Stellplätze verteilt</span></div>'+(sumObj(S.bestand)?'<div><b class="'+(nz<0?'neg':'')+'">'+nz+'</b><span>'+(nz<0?'mehr verteilt als laut Ladeliste geladen':'noch keinem Stellplatz zugeordnet')+'</span></div>':''):'');
+ var h='<div class="scroll"><table class="pt"><tr><th></th>'+SX.map(function(x){return '<th>'+x[1]+'</th>';}).join('')+'</tr>';
+ AG.forEach(function(a){h+='<tr><th>'+a[1]+'</th>'+SX.map(function(x){var k=x[0]+a[0],b=num(best[k]),u=used[k]||0,r=b-u;
+  return '<td><span class="big '+(r<0?'neg':'')+'">'+r+'</span><small>'+b+' geladen, '+u+' abgegeben</small></td>';}).join('')+'</tr>';});
+ $('rest').innerHTML=h+'</table></div>';
+}
+
+/* ---------- Sichern ---------- */
+$('btnCopy').addEventListener('click',function(){
+ var txt=JSON.stringify({roadbook:S,maps:M}),ta=$('bak');ta.value=txt;
+ function fb(){ta.focus();ta.select();$('bmsg').textContent='Text ist markiert. Mit Strg+C kopieren.';}
+ try{navigator.clipboard.writeText(txt).then(function(){$('bmsg').textContent='In die Zwischenablage kopiert ('+Math.round(txt.length/1024)+' KB).';},fb);}catch(e){fb();}
+});
+$('btnLoad').addEventListener('click',function(){
+ if(C.on&&C.role!=='planer'){$('bmsg').textContent='Nur die Planung kann Daten laden.';return;}
+ try{var d=JSON.parse($('bak').value),rb=d&&d.roadbook?d.roadbook:d;if(!rb||typeof rb!=='object'||!rb.start)throw 0;
+  var old=S.abgaben.map(function(a){return a.id;});mergeInto(rb);if(d.maps&&typeof d.maps==='object')M=Object.assign(M,d.maps);initAll();
+  touch('konvoi','strecke','route','fahrzeuge','bestand');S.abgaben.forEach(function(a){touch('abgabe:'+a.id);});old.forEach(function(id){if(!S.abgaben.some(function(a){return a.id===id;}))touch('abgabe:'+id);});
+  $('bmsg').textContent='Daten geladen.';}
+ catch(e){$('bmsg').textContent='Das sind keine gültigen Roadbook-Daten.';}
+});
+
+/* ---------- Reiter ---------- */
+var TABS=['planung','roadbook','paeckchen'];
+function setTab(n){
+ if(TABS.indexOf(n)<0)n='planung';
+ TABS.forEach(function(k){$('v-'+k).hidden=k!==n;$('tab-'+k).setAttribute('aria-selected',k===n?'true':'false');});
+ if(n==='paeckchen'){drawAbg();drawLadeplan();}if(n==='roadbook')renderRoadbook();
+}
+document.querySelector('.tabs').addEventListener('click',function(e){var n=e.target.dataset.tab;if(!n)return;setTab(n);try{location.hash=n;}catch(x){}});
+window.addEventListener('hashchange',function(){if(/access_token|type=/.test(location.hash))return;setTab((location.hash||'').slice(1));});
+
+function initAll(){fillFields();drawK();drawInfos();drawTeams();drawStations();renderRoadbook();drawBest();drawAbg();calcPk();drawLadeplan();applyRole();}
+if(LOGO){$('logo').src=LOGO;$('logo').hidden=false;}
+initAll();setTab((location.hash||'').slice(1));
+cloudInit();
+if(window.__RBTEST)window.__RBTEST={S:function(){return S;},C:C,sched:sched,insertPause:insertPause,buildPdf:buildPdf,ensureMaps:ensureMaps,wa:wa,getM:function(){return M;},getNeed:function(){return NEED;},flush:flush,q:function(){return{busy:!!mapQ,failed:mapsFailed};}};
+})();
+</script>
+
+</body>
+</html>
