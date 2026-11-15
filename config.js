@@ -15,4 +15,6 @@
 window.ROADBOOK_CONFIG = {
   supabaseUrl: "https://zolbmagelelnkfelnmnk.supabase.co/rest/v1/",
   supabaseAnonKey: "sb_publishable_NwcPxMALkpAPJHm1ULOeWg_JoUFhD1y"
+  planerEmail: "roadbook-planung@wpk-ggmbh.de",
+  teamEmail: "roadbook-team@wpk-ggmbh.de"
 };
