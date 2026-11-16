@@ -59,7 +59,7 @@ button:disabled{opacity:.55;cursor:default}
 .stl{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap}
 .stat{font-size:12px;color:var(--mute)}
 .res{display:grid;gap:4px;margin:6px 0}.hit{text-align:left;font-size:13px;padding:6px 10px}
-.hit small{display:inline;margin-left:6px}
+.hit small{display:block;margin-top:2px}
 .ex{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));align-items:end;margin-top:8px}
 .two{display:grid;gap:12px;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:start}
 @media (max-width:720px){.two{grid-template-columns:1fr}}
@@ -167,7 +167,6 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <div><label for="date">Abfahrt Datum</label><input id="date" type="date"></div>
 <div><label for="time">Abfahrt Uhrzeit</label><input id="time" type="time"></div>
 <div><label for="speed">Lkw-Schnitt (km/h)</label><input id="speed" type="number" min="30" max="90" step="any" placeholder="70"></div>
-<div><label for="maxh">Fahrerwechsel nach (h)</label><input id="maxh" type="number" min="1" max="12" step="0.5" placeholder="4"></div>
 <div><label for="dwell">Standard-Pause (Min.)</label><input id="dwell" type="number" min="0" step="5" placeholder="30"></div>
 <div><label for="fahrer">Fahrer pro Lkw</label><input id="fahrer" type="number" min="1" placeholder="3"></div>
 <div><label for="pkw">Pkw</label><input id="pkw" type="number" min="0" max="60" placeholder="0"></div>
@@ -194,13 +193,12 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <div id="fzedit"></div>
 <p class="small">Die Zahl der Zeilen folgt der Anzahl Pkw, Lkw und Reisebusse oben.</p></div>
 
-<div class="panel"><h2>Strecke und Pausenorte</h2>
-<p class="small" style="margin-top:-4px">Pausenorte suchst du selbst: über die Suche, die Schnellsuche um die fällige Stelle oder per Klick in die Karte. Koordinaten wie „47.3794, 19.0544“ gehen auch. Hinweis-Stationen (z. B. Grenze, GO-Box) erscheinen im Roadbook ohne Halt.</p>
+<div class="panel"><h2>Strecke und Stopps</h2>
+<p class="small" style="margin-top:-4px">Pausen, Fahrerwechsel und andere Stopps legst du selbst fest, so viele du brauchst, und an jeder Stelle der Strecke („Stopp danach einfügen“). Gesucht wird nach Ort, Straße mit Hausnummer oder Rastplatz. Ist ein Ort gewählt, findet „Rastplätze in der Nähe“ Raststätten, Rastplätze und Lkw-Parkplätze aus OpenStreetMap. Koordinaten wie „48.2203, 15.3956“ und ein Klick in die Karte gehen auch.</p>
 <div id="stations" style="margin-top:10px"></div>
-<div class="row"><button type="button" id="addpause">Pause mit Fahrerwechsel</button><button type="button" id="addhalt">Zwischenhalt</button><button type="button" id="addhinweis">Hinweis / Grenze</button></div>
+<div class="row"><span class="small" style="display:inline">Am Ende vor dem Ziel hinzufügen:</span><button type="button" id="addpause">Pause / Fahrerwechsel</button><button type="button" id="addtanken">Tankstopp</button><button type="button" id="addhalt">Zwischenhalt</button><button type="button" id="addhinweis">Hinweis / Grenze</button></div>
 <div class="row"><button type="button" class="primary" id="btnRoute">Route berechnen</button></div>
-<p id="rmsg" class="small" style="margin-top:8px" aria-live="polite"></p>
-<div id="dues"></div></div>
+<p id="rmsg" class="small" style="margin-top:8px" aria-live="polite"></p></div>
 
 <div class="panel"><h2>Infoseiten</h2>
 <p class="small" style="margin-top:-4px">Erscheinen im PDF nach den Etappen. Zeilen mit „- “ am Anfang werden zu Aufzählungspunkten.</p>
@@ -275,7 +273,8 @@ var TS={osm:{max:19,u:LOCALFILE?[OSMDE,OSMORG]:[OSMORG,OSMDE],a:'© OpenStreetMa
  osmde:{max:19,u:[OSMDE,OSMORG],a:'© OpenStreetMap-Mitwirkende'}};
 var SX=[['j','Jungen'],['m','Mädchen'],['u','Unisex']],AG=[['k','Kindergarten 5–7'],['g','Grundschule 7–10'],['t','Teenager 10–15']];
 var FZ=[['pkw','Pkw'],['lkw','Lkw'],['bus','Reisebus']];
-var VT={pause:'Fahrerwechsel und Pause',halt:'Zwischenhalt',hinweis:'Hinweis / Grenze'};
+var VT={pause:'Pause / Fahrerwechsel',tanken:'Tankstopp',halt:'Zwischenhalt',hinweis:'Hinweis / Grenze'};
+var OVP='https://overpass-api.de/api/interpreter',PHOTON='https://photon.komoot.io/api/';
 var TCOL=['#2e7d32','#1565c0','#c62828','#f9a825','#6a1b9a','#00838f','#ef6c00','#4e342e'];
 var INFOS=[
  {titel:'Packliste – Empfehlung',text:'- warme Kleidung und Wechselkleidung\n- festes Schuhwerk, Mütze und Schal\n- Arbeitshandschuhe für das Tragen der Umkartons\n- Warnweste\n- Schlafsack, Reisekissen, Ohrstöpsel\n- Hygieneartikel und Desinfektionsmittel\n- kleine Reiseapotheke\n- Stirn- oder Taschenlampe\n- Powerbank und Ladekabel\n- dicker Edding und Schreibzeug\n- Ausweis, Führerschein, Kreditkarte, Versichertenkarte\n- kleiner Rucksack für Tagestouren'},
@@ -287,7 +286,7 @@ function D0(){return{name:'',date:'',time:'',speed:'',maxh:'',dwell:'',fahrer:''
  start:{name:'',lat:null,lon:null},vias:[],ziel:{name:'',lat:null,lon:null},
  legKm:[0],route:null,teamRoutes:{},fz:{pkw:[],lkw:[],bus:[]},teams:[],kontakte:[{rolle:'',name:'',tel:''}],
  infos:[],bestand:{},abgaben:[],tank:{}};}
-var DEF={speed:70,maxh:4,dwell:30,time:'06:00'};
+var DEF={speed:70,dwell:30,time:'06:00'};
 function dwellDef(){return S.dwell===''||S.dwell==null?DEF.dwell:num(S.dwell);}
 var SECT={konvoi:['name','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus','truck','kontakte','infos'],strecke:['start','vias','ziel','legKm'],route:['route','teamRoutes'],fahrzeuge:['fz','teams'],bestand:['bestand','paletten']};
 var S,M={},P={tiles:'osm'},netBlocked=false,mapsFailed=false,busy=false;
@@ -510,6 +509,8 @@ function label(s){return s.k==='start'?'Start':s.k==='ziel'?'Ziel':VT[s.o.type]|
 function fixLeg(){var n=S.vias.length+1;while(S.legKm.length<n)S.legKm.push(0);S.legKm.length=n;}
 function stationsKm(){fixLeg();var c=[0],t=0;for(var i=0;i<S.legKm.length;i++){t+=num(S.legKm[i]);c.push(t);}return c;}
 function dwellOf(s){return s.k==='via'?num(s.o.dwell):0;}
+function needCard(){return num(S.lkw)>0||num(S.bus)>0;}
+var CARDTXT='Bei Lkw und Reisebussen muss die Fahrerkarte immer gesteckt sein. Beim Fahrerwechsel die Karte des neuen Fahrers stecken.';
 function stName(s){return s.o.name||(isPause(s)?'Pausenort offen':label(s));}
 
 /* ---------- Geometrie ---------- */
@@ -622,7 +623,6 @@ function buildJobs(){
  S.teams.forEach(function(t){if(t.ab&&t.ziel&&t.ziel.lat!=null)allMk.push({lat:t.ziel.lat,lon:t.ziel.lon,label:'Z',col:t.farbe||'#555'});});
  if(pts.length>1){var ov=fitView(pts,1000,560);if(ov)J.ov={key:'ov',view:ov,lines:main.concat(tl),markers:allMk};}
  var R=sched();
- if(S.route)R.dues.forEach(function(d,j){var p=pointAt(d.km);if(p)J['due'+j]={key:'due'+j,view:{lat:p[0],lon:p[1],z:12,w:640,h:360},markers:[{lat:p[0],lon:p[1],label:'!',col:'#c77700'}],lines:main};});
  R.etappen.forEach(function(e,j){
   var a=e.from.s.o,b=e.to.s.o;if(a.lat==null||b.lat==null)return;
   var lp=slicePts(S.route,e.from.km,e.to.km),fp=lp.concat([[a.lat,a.lon],[b.lat,b.lon]]);
@@ -669,37 +669,27 @@ function mapBox(key,pick,alt){return '<div class="map loading" data-mapwrap="'+k
 
 /* ---------- Zeitplan ---------- */
 function startTime(){var d=S.date||new Date().toISOString().slice(0,10),p=d.split('-'),q=(S.time||DEF.time).split(':');return new Date(+p[0],(+p[1]||1)-1,+p[2]||1,+q[0]||0,+q[1]||0).getTime();}
-function dueWalk(fromKm,legKm,since,t,sp,LIM,after,out){
- var pos=0,s2=since,g=0;
- while(s2+(legKm-pos)/sp*60>LIM+0.01&&g++<60){pos+=Math.max(0,LIM-s2)*sp/60;out.push({km:fromKm+pos,after:after,time:new Date(t+pos/sp*3600000),run:since+legKm/sp*60});s2=0;}
-}
 function sched(){
- var st=stationList(),cum=stationsKm(),sp=num(S.speed)||70,LIM=(num(S.maxh)||4)*60,t=startTime();
- var rows=[],dues=[],since=0,drive=0,stand=0,wc=0,sunday=false;
+ var st=stationList(),cum=stationsKm(),sp=num(S.speed)||70,t=startTime();
+ var rows=[],drive=0,stand=0,wc=0;
  st.forEach(function(s,i){
   var legKm=0,legMin=0,w=[];
-  if(i>0){
-   legKm=cum[i]-cum[i-1];legMin=legKm/sp*60;
-   dueWalk(cum[i-1],legKm,since,t,sp,LIM,i-1,dues);
-   if(since+legMin>LIM+0.5)w.push(hm(since+legMin)+' ohne Fahrerwechsel seit dem letzten Wechsel (Grenze '+hm(LIM)+').');
-   since+=legMin;t+=legMin*60000;drive+=legMin;
-  }
+  if(i>0){legKm=cum[i]-cum[i-1];legMin=legKm/sp*60;t+=legMin*60000;drive+=legMin;}
   var arr=new Date(t);
-  if(isPause(s)){since=0;wc++;}
+  if(isPause(s))wc++;
   var dw=dwellOf(s);stand+=dw;t+=dw*60000;var dep=new Date(t);
-  if(arr.getDay()===0||dep.getDay()===0)sunday=true;
-  if(isPause(s)&&s.o.lat==null)w.push('Pausenort noch nicht gewählt.');
-  rows.push({s:s,i:i,km:cum[i],legKm:legKm,legMin:legMin,arr:arr,dep:dep,dwell:dw,warn:w,since:since});
+  if(s.k==='via'&&s.o.lat==null)w.push('Ort noch nicht gewählt.');
+  rows.push({s:s,i:i,km:cum[i],legKm:legKm,legMin:legMin,arr:arr,dep:dep,dwell:dw,warn:w});
  });
  var stops=rows.filter(function(r){return isStop(r.s);}),et=[];
  for(var j=1;j<stops.length;j++){(function(a,b){
   et.push({from:a,to:b,km:b.km-a.km,min:(b.km-a.km)/sp*60,hints:rows.filter(function(r){return r.i>a.i&&r.i<b.i;}),splits:S.teams.filter(function(t){return t.ab===b.s.key;})});})(stops[j-1],stops[j]);}
  var branches=S.teams.filter(function(t){return t.ab;}).map(function(t){
   var r=rows.find(function(x){return x.s.key===t.ab;}),tr=S.teamRoutes[t.id];if(!r)return null;
-  var km=tr?num(tr.km):0,bd=[];if(km)dueWalk(0,km,r.since,r.dep.getTime(),sp,LIM,-1,bd);
-  return{team:t,row:r,km:km,min:km/sp*60,arr:new Date(r.dep.getTime()+km/sp*3600000),dues:bd};
+  var km=tr?num(tr.km):0;
+  return{team:t,row:r,km:km,min:km/sp*60,arr:new Date(r.dep.getTime()+km/sp*3600000)};
  }).filter(Boolean);
- return{rows:rows,dues:dues,total:cum[cum.length-1],drive:drive,stand:stand,wc:wc,sunday:sunday,etappen:et,branches:branches};
+ return{rows:rows,total:cum[cum.length-1],drive:drive,stand:stand,wc:wc,etappen:et,branches:branches};
 }
 var dfmt=new Intl.DateTimeFormat('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}),tfmt=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'});
 function hm(m){m=Math.round(m);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+' h';}
@@ -709,31 +699,54 @@ function kmf(x){return (x<10&&x>0?(Math.round(x*10)/10):Math.round(x)).toLocaleS
 /* ---------- Ortssuche ---------- */
 var coordRe=/^\s*(-?\d{1,2}(?:[.,]\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/;
 function parseCoord(q){var m=q.match(coordRe);if(!m)return null;var la=parseFloat(m[1].replace(',','.')),lo=parseFloat(m[2].replace(',','.'));return Math.abs(la)<=90&&Math.abs(lo)<=180?[la,lo]:null;}
-async function nominatim(q,c,bounded,limit){
- var u=NOM+'?format=jsonv2&limit='+(limit||5)+'&accept-language=de&q='+encodeURIComponent(q);
- if(c){var dl=0.3,dn=0.22;u+='&viewbox='+(c[1]-dl)+','+(c[0]+dn)+','+(c[1]+dl)+','+(c[0]-dn)+(bounded?'&bounded=1':'');}
- var r=await fj(u,null,20000);if(c)r.sort(function(a,b){return hav(c,[+a.lat,+a.lon])-hav(c,[+b.lat,+b.lon]);});return r;
+var KIND={services:'Raststätte / Autohof',rest_area:'Rastplatz',fuel:'Tankstelle',parking:'Parkplatz',city:'Stadt',town:'Ort',village:'Ort',hamlet:'Ort',suburb:'Ortsteil',house:'Adresse',building:'Adresse',residential:'Straße',primary:'Straße',secondary:'Straße',tertiary:'Straße',unclassified:'Straße',service:'Straße',trunk:'Straße',motorway:'Autobahn',street:'Straße',hotel:'Hotel',motel:'Motel',restaurant:'Restaurant',fast_food:'Restaurant',truck_stop:'Autohof'};
+function kindOf(a,b){return KIND[b]||KIND[a]||'';}
+function addrNom(d){var a=d.address||{};var road=a.road||a.pedestrian||a.street||'',st=(road+(a.house_number?' '+a.house_number:'')).trim(),pl=[a.postcode,a.city||a.town||a.village||a.municipality||a.county].filter(Boolean).join(' ');return [st,pl,a.country].filter(Boolean).join(', ');}
+function addrPh(p){var st=((p.street||'')+(p.housenumber?' '+p.housenumber:'')).trim(),pl=[p.postcode,p.city||p.district||p.county].filter(Boolean).join(' ');return [st,pl,p.country].filter(Boolean).join(', ');}
+async function placeSearch(q,c){
+ var nu=NOM+'?format=jsonv2&addressdetails=1&limit=8&accept-language=de&q='+encodeURIComponent(q);
+ if(c){var dl=1.5,dn=1;nu+='&viewbox='+(c[1]-dl)+','+(c[0]+dn)+','+(c[1]+dl)+','+(c[0]-dn);}
+ var pu=PHOTON+'?limit=8&lang=de&q='+encodeURIComponent(q)+(c?'&lat='+c[0]+'&lon='+c[1]:'');
+ var res=await Promise.allSettled([fj(nu,null,20000),fj(pu,null,20000)]),out=[];
+ if(res[0].status==='fulfilled')(res[0].value||[]).forEach(function(d){var A0=d.address||{},rd=((A0.road||'')+(A0.house_number?' '+A0.house_number:'')).trim(),ct=A0.city||A0.town||A0.village||A0.municipality||'';var nm=d.name||(rd?[rd,ct].filter(Boolean).join(', '):String(d.display_name).split(',')[0]);out.push({name:nm,full:d.display_name,lat:+d.lat,lon:+d.lon,kind:kindOf(d.category,d.type),addr:addrNom(d)});});
+ if(res[1].status==='fulfilled')((res[1].value||{}).features||[]).forEach(function(f){var p=f.properties||{},g=f.geometry&&f.geometry.coordinates;if(!g)return;var ad=addrPh(p),rd2=((p.street||'')+(p.housenumber?' '+p.housenumber:'')).trim(),nm=p.name||[rd2,p.city||p.district].filter(Boolean).join(', ')||q;out.push({name:nm,full:[p.name,ad].filter(Boolean).join(', '),lat:g[1],lon:g[0],kind:kindOf(p.osm_key,p.osm_value)||kindOf('',p.type),addr:ad});});
+ if(res[0].status==='rejected'&&res[1].status==='rejected')throw res[0].reason;
+ var uniq=[];out.forEach(function(h){if(!uniq.some(function(u){return hav([u.lat,u.lon],[h.lat,h.lon])<0.15&&(u.name===h.name||!h.name);}))uniq.push(h);});
+ if(c)uniq.sort(function(a,b){return hav(c,[a.lat,a.lon])-hav(c,[b.lat,b.lon]);});
+ return uniq.slice(0,10);
 }
-function hitsHtml(r,c){return r.map(function(d,j){return '<button type="button" class="hit" data-hit="'+j+'">'+esc(d.display_name)+(c?'<small>'+hav(c,[+d.lat,+d.lon]).toFixed(1).replace('.',',')+' km entfernt</small>':'')+'</button>';}).join('');}
-function shortName(d,two){var p=d.display_name.split(',').map(function(x){return x.trim();});return two?p.slice(0,2).join(', '):(p.length>1?p[0]+', '+p[p.length-1]:p[0]);}
+async function nearbyRest(c,radius){
+ var A='(around:'+(radius||20000)+','+c[0].toFixed(5)+','+c[1].toFixed(5)+')';
+ var q='[out:json][timeout:25];(nwr["highway"="services"]'+A+';nwr["highway"="rest_area"]'+A+';nwr["amenity"="fuel"]["hgv"~"yes|designated"]'+A+';nwr["amenity"="parking"]["hgv"~"yes|designated"]'+A+';nwr["amenity"="parking"]["capacity:hgv"]'+A+';);out center tags 80;';
+ var j=await fj(OVP,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)},40000),out=[];
+ (j.elements||[]).forEach(function(el){var t=el.tags||{},la=el.lat!=null?el.lat:(el.center&&el.center.lat),lo=el.lon!=null?el.lon:(el.center&&el.center.lon);if(la==null)return;
+  var kind=t.highway==='services'?'Raststätte / Autohof':t.highway==='rest_area'?'Rastplatz':t.amenity==='fuel'?'Tankstelle (Lkw)':'Lkw-Parkplatz';
+  var nm=t.name||t.brand||t.operator||kind,extra=[t.ref?'Autobahn '+t.ref:'',t['capacity:hgv']?t['capacity:hgv']+' Lkw-Stellplätze':'',t.toilets==='yes'?'WC':''].filter(Boolean).join(' · ');
+  out.push({name:nm,full:[nm,extra].filter(Boolean).join(' · '),lat:la,lon:lo,kind:kind,addr:[t['addr:street']?(t['addr:street']+' '+(t['addr:housenumber']||'')).trim():'',[t['addr:postcode'],t['addr:city']].filter(Boolean).join(' ')].filter(Boolean).join(', ')});});
+ out.sort(function(a,b){return hav(c,[a.lat,a.lon])-hav(c,[b.lat,b.lon]);});
+ var uniq=[];out.forEach(function(h){if(!uniq.some(function(u){return hav([u.lat,u.lon],[h.lat,h.lon])<0.1;}))uniq.push(h);});
+ return uniq.slice(0,15);
+}
+function hitsHtml(r,c){return r.map(function(d,j){return '<button type="button" class="hit" data-hit="'+j+'"><b>'+esc(d.name)+'</b>'+(d.kind?' · '+esc(d.kind):'')+'<small>'+esc(d.full)+(c?' · '+hav(c,[d.lat,d.lon]).toFixed(1).replace('.',',')+' km entfernt':'')+'</small></button>';}).join('');}
 
 /* ---------- Planung: Stationen ---------- */
-function statusOf(o){return o.lat!=null?'<span class="ok">Ort gesetzt</span> · '+o.lat.toFixed(4)+', '+o.lon.toFixed(4):(o.ref?'Fällige Stelle bekannt, Pausenort wählen':(o.name?'Noch nicht gesucht':''));}
+function statusOf(o){return o.lat!=null?'<span class="ok">Ort gesetzt</span> · '+o.lat.toFixed(4)+', '+o.lon.toFixed(4):(o.name?'Noch nicht gesucht':'');}
 function drawStations(){
  fixLeg();var st=stationList(),h='';
  st.forEach(function(s,i){
   var o=s.o,lab=(i+1)+' · '+label(s),pick=!!stView(s),id='s-'+s.key;
   h+='<div class="st '+vt(s)+'" id="st-'+s.key+'" data-idx="'+i+'"><div class="stl"><span class="tag lab">'+esc(lab)+'</span><span class="stat">'+statusOf(o)+'</span></div><div class="two"><div>';
   if(s.k==='via')h+='<label for="'+id+'-type">Art</label><select id="'+id+'-type" data-f="type">'+Object.keys(VT).map(function(k){return '<option value="'+k+'"'+(o.type===k?' selected':'')+'>'+VT[k]+'</option>';}).join('')+'</select><div style="height:8px"></div>';
-  h+='<label for="'+id+'-name">'+(o.type==='hinweis'?'Ort oder Bezeichnung':'Ort suchen')+'</label><div class="line"><input type="text" id="'+id+'-name" data-f="name" value="'+esc(o.name)+'" placeholder="'+(s.k==='start'?'Startort, z. B. Sammelstelle':s.k==='ziel'?'Zielort':o.type==='pause'?'z. B. Autohof Regensburg Ost':o.type==='hinweis'?'z. B. Grenze Österreich':'Ort')+'"><button type="button" data-act="search">Suchen</button></div>';
-  if(o.type==='pause')h+='<div class="row" style="margin-top:6px"><span class="small" style="display:inline">In der Nähe:</span><button type="button" class="mini" data-near="Rastplatz">Rastplatz</button><button type="button" class="mini" data-near="Autohof">Autohof</button><button type="button" class="mini" data-near="Raststätte">Raststätte</button><button type="button" class="mini" data-near="Tankstelle">Tankstelle</button></div>';
+  h+='<label for="'+id+'-name">'+(o.type==='hinweis'?'Ort oder Bezeichnung':'Ort, Straße oder Rastplatz suchen')+'</label><div class="line"><input type="text" id="'+id+'-name" data-f="name" value="'+esc(o.name)+'" placeholder="'+(s.k==='start'?'Ort oder Straße, z. B. Hauptstraße 1, Hanau':s.k==='ziel'?'Zielort oder Adresse':o.type==='hinweis'?'z. B. Grenze Österreich':'z. B. Loosdorf, Rastplatz Loosdorf oder Straße')+'"><button type="button" data-act="search">Suchen</button></div>';
+  if(s.k==='via'&&o.type!=='hinweis')h+='<div class="row" style="margin-top:6px"><button type="button" class="mini" data-act="near"'+(o.lat==null?' title="Erst einen Ort wählen"':'')+'>Rastplätze in der Nähe</button></div>';
   h+='<div class="res"></div><div class="ex">';
   if(i>0)h+='<div><label for="'+id+'-leg">km ab Station davor</label><input type="number" min="0" step="any" id="'+id+'-leg" data-f="leg" value="'+(num(S.legKm[i-1])?Math.round(num(S.legKm[i-1])*10)/10:'')+'"></div>';
   if(s.k==='via'&&o.type!=='hinweis')h+='<div><label for="'+id+'-dwell">Aufenthalt (Min.)</label><input type="number" min="0" id="'+id+'-dwell" data-f="dwell" value="'+num(o.dwell)+'"></div>';
   h+='</div><div style="margin-top:8px"><label for="'+id+'-addr">Adresse</label><input type="text" id="'+id+'-addr" data-f="addr" value="'+esc(o.addr||'')+'" placeholder="Straße, PLZ Ort"></div>';
   h+='<div style="margin-top:8px"><label for="'+id+'-note">'+(o.type==='hinweis'?'Hinweis (z. B. GO-Box einschalten)':'Notiz (Zufahrt, Stellplätze, Funkkanal)')+'</label><input type="text" id="'+id+'-note" data-f="note" value="'+esc(o.note||'')+'"></div>';
+  h+='<div class="row">'+(s.k!=='ziel'?'<button type="button" class="mini" data-act="insafter">Stopp danach einfügen</button>':'')+'</div>';
   if(s.k==='via')h+='<div class="row"><button type="button" class="mini" data-act="up" aria-label="Station nach oben">↑</button><button type="button" class="mini" data-act="down" aria-label="Station nach unten">↓</button><button type="button" class="mini" data-act="del">Entfernen</button></div>';
-  h+='</div><div>'+(pick?mapBox(s.key,true,'Karte '+lab)+'<span class="small" style="margin-top:4px">Klick in die Karte setzt den Ort, mit − zoomst du heraus. '+(o.ref?'„!“ markiert die Stelle, an der der Wechsel fällig ist.':'')+'</span>':'<div class="map"><span class="mapmsg">Nach der Ortswahl erscheint hier der Kartenausschnitt.</span></div>')+'</div></div></div>';
+  h+='</div><div>'+(pick?mapBox(s.key,true,'Karte '+lab)+'<span class="small" style="margin-top:4px">Klick in die Karte setzt den Ort, mit − zoomst du heraus. </span>':'<div class="map"><span class="mapmsg">Nach der Ortswahl erscheint hier der Kartenausschnitt.</span></div>')+'</div></div></div>';
  });
  $('stations').innerHTML=h;
  ensureMapsSoon();
@@ -748,9 +761,9 @@ $('stations').addEventListener('input',function(e){
 });
 $('stations').addEventListener('change',function(e){
  var t=e.target,s=stOf(t);if(!s||t.dataset.f!=='type')return;
- s.o.type=t.value;s.o.dwell=t.value==='hinweis'?0:(num(s.o.dwell)||dwellDef());touch('strecke');keepFocus(drawStations);drawTeams();renderRoadbook();
+ s.o.type=t.value;s.o.dwell=t.value==='hinweis'?0:(num(s.o.dwell)||(t.value==='pause'?dwellDef():30));touch('strecke');keepFocus(drawStations);drawTeams();renderRoadbook();
 });
-$('stations').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.dataset.f==='name'){e.preventDefault();searchStation(stOf(e.target),null);}});
+$('stations').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.dataset.f==='name'){e.preventDefault();searchStation(stOf(e.target),false);}});
 function setPoint(s,lat,lon,name){
  if(C.on&&C.role!=='planer')return;
  s.o.lat=Math.round(lat*1e6)/1e6;s.o.lon=Math.round(lon*1e6)/1e6;if(name!=null)s.o.name=name;else if(!s.o.name)s.o.name='Gewählter Punkt';
@@ -758,42 +771,45 @@ function setPoint(s,lat,lon,name){
 }
 $('stations').addEventListener('click',function(e){
  var t=e.target,s=stOf(t);if(!s)return;
- if(t.dataset.hit!=null){var d=t.closest('.res')._hits[+t.dataset.hit];if(!s.o.addr)s.o.addr=d.display_name.split(',').slice(1,4).join(',').trim();setPoint(s,+d.lat,+d.lon,shortName(d,s.k==='via'));return;}
- if(t.dataset.near){searchStation(s,t.dataset.near);return;}
+ var hb=t.closest('[data-hit]');if(hb){var d=hb.closest('.res')._hits[+hb.dataset.hit];if(d.addr)s.o.addr=d.addr;setPoint(s,d.lat,d.lon,d.name);return;}
  if(t.dataset.zoom){if(C.on&&C.role!=='planer')return;var v=stView(s);s.o.z=Math.max(5,Math.min(tsrc().max,v.z+(+t.dataset.zoom)));touch('strecke');ensureMaps();return;}
  if(t.dataset.pick){if(C.on&&C.role!=='planer')return;var c=M[s.key];if(!c||!c.view)return;var r=t.getBoundingClientRect(),v2=c.view,cc=px(v2.lat,v2.lon,v2.z);
   var q=ll(cc[0]-v2.w/2+(e.clientX-r.left)/r.width*v2.w,cc[1]-v2.h/2+(e.clientY-r.top)/r.height*v2.h,v2.z);setPoint(s,q[0],q[1],null);return;}
  var a=t.dataset.act;if(!a)return;
- if(a==='search'){searchStation(s,null);return;}
+ if(a==='search'){searchStation(s,false);return;}
+ if(a==='near'){searchStation(s,true);return;}
+ if(a==='insafter'){insertAfter(+t.closest('.st').dataset.idx);return;}
  var v3=S.vias,j=s.i;
  if(a==='del'){var key=s.key;v3.splice(j,1);S.legKm.splice(j,2,num(S.legKm[j])+num(S.legKm[j+1]));S.teams.forEach(function(tm){if(tm.ab===key)tm.ab='';});touch('fahrzeuge');}
  else{var k=j+(a==='up'?-1:1);if(k<0||k>=v3.length)return;var tmp=v3[j];v3[j]=v3[k];v3[k]=tmp;S.legKm=[];}
  geoChanged();touch('strecke','route');drawStations();drawTeams();renderRoadbook();
 });
 async function searchStation(s,near){
- if(!s)return;var q=near||(s.o.name||'').trim(),idx=stationList().findIndex(function(x){return x.key===s.key;}),box=$('stations').querySelectorAll('.res')[idx];if(!q||!box)return;
- var cc=!near&&parseCoord(q);if(cc){setPoint(s,cc[0],cc[1],'Punkt '+cc[0].toFixed(4)+', '+cc[1].toFixed(4));return;}
- var c=s.o.ref?[s.o.ref.lat,s.o.ref.lon]:(s.o.lat!=null?[s.o.lat,s.o.lon]:null);
- if(near&&!c){box.textContent='Für die Schnellsuche zuerst einen Ort wählen oder die Route berechnen.';return;}
+ if(!s)return;var q=(s.o.name||'').trim(),idx=stationList().findIndex(function(x){return x.key===s.key;}),box=$('stations').querySelectorAll('.res')[idx];if(!box)return;
+ if(near){
+  if(s.o.lat==null){box.textContent='Zuerst einen Ort suchen und wählen (z. B. Loosdorf). Dann zeigt dieser Knopf die Rastplätze im Umkreis von 20 km.';return;}
+  var c0=[s.o.lat,s.o.lon];box.textContent='Suche Rastplätze in OpenStreetMap …';
+  try{var rn=await nearbyRest(c0,20000);if(!rn.length){box.textContent='Im Umkreis von 20 km sind in OpenStreetMap keine Rastplätze eingetragen.';return;}box._hits=rn;box.innerHTML=hitsHtml(rn,c0);}
+  catch(e){box.innerHTML='<span class="err small">'+esc(netMsg(e))+'</span>';}
+  return;}
+ if(!q)return;
+ var cc=parseCoord(q);if(cc){setPoint(s,cc[0],cc[1],'Punkt '+cc[0].toFixed(4)+', '+cc[1].toFixed(4));return;}
+ var st=stationList(),prev=null;for(var k=idx-1;k>=0;k--){if(st[k].o.lat!=null){prev=[st[k].o.lat,st[k].o.lon];break;}}
+ var c=s.o.lat!=null?[s.o.lat,s.o.lon]:prev;
  box.textContent='Suche …';
- try{var r=await nominatim(q,c,!!(near||(s.o.type==='pause'&&c)),near?8:5);
-  if(!r.length){box.textContent=near?'Kein „'+q+'“ im Umkreis von etwa 20 km gefunden. Zoom heraus und klick in die Karte, oder suche frei.':'Kein Treffer. Mit Land oder Region erneut suchen.';return;}
+ try{var r=await placeSearch(q,c);
+  if(!r.length){box.textContent='Kein Treffer. Mit Ort ergänzen (z. B. „Hauptstraße 5, Loosdorf“) oder erst den Ort suchen und dann „Rastplätze in der Nähe“ nutzen.';return;}
   box._hits=r;box.innerHTML=hitsHtml(r,c);
  }catch(e){box.innerHTML='<span class="err small">'+esc(netMsg(e))+'</span>';}
 }
 function newVia(type){return{id:rid(),type:type,name:'',lat:null,lon:null,dwell:type==='pause'?dwellDef():type==='hinweis'?0:30,note:'',addr:''};}
-function addVia(type){S.vias.push(newVia(type));S.legKm.splice(S.legKm.length-1,0,0);geoChanged();touch('strecke','route');drawStations();drawTeams();renderRoadbook();var v=S.vias[S.vias.length-1],el=$('st-v'+v.id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});}
+function focusStation(v){var el=$('st-v'+v.id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});var inp=el.querySelector('input[data-f="name"]');if(inp)inp.focus({preventScroll:true});}}
+function addVia(type){var v=newVia(type);S.vias.push(v);S.legKm.splice(S.legKm.length-1,0,0);geoChanged();touch('strecke','route');drawStations();drawTeams();renderRoadbook();focusStation(v);}
+function insertAfter(idx){var v=newVia('pause');fixLeg();var leg=num(S.legKm[idx]);S.vias.splice(idx,0,v);S.legKm.splice(idx,1,Math.round(leg/2*10)/10,Math.round(leg/2*10)/10);geoChanged();touch('strecke','route');drawStations();drawTeams();renderRoadbook();focusStation(v);}
 $('addpause').addEventListener('click',function(){addVia('pause');});
+$('addtanken').addEventListener('click',function(){addVia('tanken');});
 $('addhalt').addEventListener('click',function(){addVia('halt');});
 $('addhinweis').addEventListener('click',function(){addVia('hinweis');});
-function insertPause(d){
- var cum=stationsKm(),v=newVia('pause'),sk=Math.max(cum[d.after]+0.1,d.km-(num(S.speed)||70)/4),p=pointAt(sk);
- if(p)v.ref={lat:Math.round(p[0]*1e5)/1e5,lon:Math.round(p[1]*1e5)/1e5};v.refKm=Math.round(sk);
- S.vias.splice(d.after,0,v);
- var a=d.km-cum[d.after],b=cum[d.after+1]-d.km;S.legKm.splice(d.after,1,Math.round(a*10)/10,Math.round(b*10)/10);
- touch('strecke');drawStations();drawTeams();renderRoadbook();setTab('planung');
- var el=$('st-v'+v.id);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});var inp=el.querySelector('input[data-f="name"]');if(inp)inp.focus({preventScroll:true});}
-}
 
 /* ---------- Route ---------- */
 var rTimer=null;
@@ -813,7 +829,7 @@ async function computeRoute(){
 async function runRoute(){
  if(busy||(C.on&&C.role!=='planer'))return;busy=true;$('btnRoute').disabled=true;
  try{rmsg('Route wird berechnet …');var f=await computeRoute();touch('strecke','route');drawStations();drawTeams();renderRoadbook();
-  var n=sched().dues.length;rmsg('<span class="ok">Route berechnet.</span> '+(n?n+' Fahrerwechsel noch ohne Pausenort, siehe unten.':'Alle Fahrerwechsel haben einen Pausenort.')+(f?' '+f+' Team-Weiterfahrten ließen sich nicht berechnen.':''));
+  rmsg('<span class="ok">Route berechnet.</span>'+(f?' '+f+' Team-Weiterfahrten ließen sich nicht berechnen.':''));
  }catch(e){rmsg(esc(/^Bitte/.test(e.message)?e.message:netMsg(e)),'err');}
  busy=false;$('btnRoute').disabled=false;
 }
@@ -841,11 +857,11 @@ $('tedit').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.d
 $('tedit').addEventListener('click',function(e){var t=e.target,tm=teamOf(t);if(!tm)return;
  if(t.dataset.act==='tdel'){S.teams=S.teams.filter(function(x){return x!==tm;});delete S.teamRoutes[tm.id];FZ.forEach(function(f){(S.fz[f[0]]||[]).forEach(function(o){if(o&&o.team===tm.id)o.team='';});});touch('fahrzeuge','route');drawTeams();renderRoadbook();return;}
  if(t.dataset.act==='tsearch'){teamSearch(tm,t.closest('.team'));return;}
- if(t.dataset.hit!=null){var d=t.closest('.res')._hits[+t.dataset.hit];tm.ziel={name:shortName(d,false),lat:+d.lat,lon:+d.lon};delete S.teamRoutes[tm.id];touch('fahrzeuge','route');drawTeams();renderRoadbook();scheduleRoute();}
+ var hb=t.closest('[data-hit]');if(hb){var d=hb.closest('.res')._hits[+hb.dataset.hit];tm.ziel={name:d.name,lat:d.lat,lon:d.lon};delete S.teamRoutes[tm.id];touch('fahrzeuge','route');drawTeams();renderRoadbook();scheduleRoute();}
 });
 async function teamSearch(tm,el){if(!tm)return;var q=(tm.ziel&&tm.ziel.name||'').trim(),box=el.querySelector('.res');if(!q)return;
  var cc=parseCoord(q);if(cc){tm.ziel={name:'Punkt '+cc[0].toFixed(4)+', '+cc[1].toFixed(4),lat:cc[0],lon:cc[1]};delete S.teamRoutes[tm.id];touch('fahrzeuge','route');drawTeams();renderRoadbook();scheduleRoute();return;}
- box.textContent='Suche …';try{var r=await nominatim(q,null,false,5);if(!r.length){box.textContent='Kein Treffer.';return;}box._hits=r;box.innerHTML=hitsHtml(r,null);}catch(e){box.innerHTML='<span class="err small">'+esc(netMsg(e))+'</span>';}}
+ box.textContent='Suche …';try{var r=await placeSearch(q,null);if(!r.length){box.textContent='Kein Treffer.';return;}box._hits=r;box.innerHTML=hitsHtml(r,null);}catch(e){box.innerHTML='<span class="err small">'+esc(netMsg(e))+'</span>';}}
 $('addteam').addEventListener('click',function(){S.teams.push({id:rid(),name:'',farbe:TCOL[S.teams.length%TCOL.length],ab:'',ziel:{name:'',lat:null,lon:null},hinweis:''});touch('fahrzeuge');drawTeams();renderRoadbook();});
 
 /* ---------- Fahrzeuge, Kontakte, Infos ---------- */
@@ -884,14 +900,13 @@ function renderRoadbook(){
  var R=sched(),notes='',st=R.rows;
  if(!S.date)notes+='<div class="info">Noch kein Abfahrtsdatum eingetragen. Die Zeiten gelten vorläufig ab heute'+(S.time?'':', 06:00 Uhr')+'.</div>';
  if(!(R.total>0))notes+='<div class="note">Noch keine Strecke. In der Planung Ziel suchen und „Route berechnen“ wählen, oder Kilometer je Etappe eintragen.</div>';
- if(R.dues.length)notes+='<div class="note">'+R.dues.length+' Fahrerwechsel noch ohne Pausenort. Die fälligen Stellen stehen in der Planung unter „Strecke und Pausenorte“.</div>';
  if(S.route&&S.route.profile==='car')notes+='<div class="note">Die Route ist eine Pkw-Route, Lkw-Routing war nicht möglich ('+esc(S.route.why||'unbekannter Grund')+'). Lkw-Beschränkungen sind nicht berücksichtigt.</div>';
  if(!S.route&&R.total>0)notes+='<div class="note">Kilometer stammen aus der Eingabe, nicht aus einer berechneten Route. Karten zeigen deshalb keine Streckenlinie.</div>';
- if(R.sunday)notes+='<div class="note">Eine Station liegt auf einem Sonntag. Das Sonntagsfahrverbot für Lkw gilt in Deutschland und weiteren Ländern; Ausnahmegenehmigung für den Hilfskonvoi prüfen.</div>';
+ if(needCard())notes+='<div class="info">'+CARDTXT+'</div>';
  $('notes').innerHTML=notes;
  var last=st[st.length-1],nl=num(S.lkw),fzN=nl+num(S.pkw)+num(S.bus);
  $('sum').innerHTML='<div><b>'+kmf(R.total)+'</b><span>Strecke bis '+esc(S.ziel.name||'Ziel')+'</span></div><div><b>'+hm(R.drive)+'</b><span>Fahrzeit</span></div><div><b>'+hm(R.stand)+'</b><span>Standzeit</span></div>'
-  +'<div><b>'+(R.total>0?stamp(last.arr):'–')+'</b><span>Ankunft am Ziel</span></div><div><b>'+R.wc+'</b><span>Fahrerwechsel geplant</span></div>'
+  +'<div><b>'+(R.total>0?stamp(last.arr):'–')+'</b><span>Ankunft am Ziel</span></div><div><b>'+R.wc+'</b><span>Pausen / Fahrerwechsel</span></div>'
   +(fzN?'<div><b>'+fzN+'</b><span>Fahrzeuge'+(nl&&num(S.fahrer)?', '+nl*num(S.fahrer)+' Lkw-Fahrer':'')+'</span></div>':'');
  var ks=S.kontakte.filter(function(k){return k.name||k.tel;});
  $('okontakt').innerHTML=ks.length?'<h3>Teamleitung und Ansprechpartner</h3><div class="kontakt">'+ks.map(function(k){return '<div><span class="tag">'+esc(k.rolle||'Ansprechpartner')+'</span><b>'+esc(k.name)+'</b><span class="tel">'+esc(k.tel)+'</span></div>';}).join('')+'</div>':'';
@@ -909,6 +924,7 @@ function renderRoadbook(){
    +(s.o.addr?'<span>Adresse</span><b style="font-weight:500">'+esc(s.o.addr)+'</b>':'')
    +(s.o.lat!=null?'<span>Koord.</span><b>'+s.o.lat.toFixed(5)+', '+s.o.lon.toFixed(5)+' · <a href="https://www.openstreetmap.org/?mlat='+s.o.lat+'&mlon='+s.o.lon+'#map=16/'+s.o.lat+'/'+s.o.lon+'" target="_blank" rel="noopener">OSM</a></b>':'')+'</div>'
    +(s.o.note?'<p style="margin:6px 0 0">'+esc(s.o.note)+'</p>':'')
+   +(isPause(s)&&needCard()?'<span class="split">Fahrerwechsel: Fahrerkarte des neuen Fahrers stecken</span>':'')
    +splits.map(function(t){return '<span class="split"><span class="swatch" style="background:'+esc(t.farbe)+'"></span>Konvoiteilung: '+esc(t.name||'Team')+' fährt weiter nach '+esc(t.ziel&&t.ziel.name||'(Ziel offen)')+'</span>';}).join('')
    +r.warn.map(function(x){return '<span class="wn">'+esc(x)+'</span>';}).join('')+'</div>'
    +'<div>'+(s.o.lat!=null?mapBox(s.key,false,'Karte '+label(s)):'')+'</div></div>';
@@ -916,20 +932,13 @@ function renderRoadbook(){
  $('tl').innerHTML=h;
  $('obranch').innerHTML=R.branches.length?'<h3>Weiterfahrt der Teams</h3>'+R.branches.map(function(b){var t=b.team;
   return '<div class="team" style="border-left-color:'+esc(t.farbe)+'"><div class="two"><div><b>'+esc(t.name||'Team')+'</b><div class="times"><span>Ab</span><b>'+esc(stName(b.row.s))+', '+stamp(b.row.dep)+'</b><span>Nach</span><b>'+esc(t.ziel&&t.ziel.name||'(Ziel offen)')+'</b><span>Strecke</span><b>'+(b.km?kmf(b.km)+' · '+hm(b.min):'noch nicht berechnet')+'</b>'+(b.km?'<span>Ankunft</span><b>'+stamp(b.arr)+'</b>':'')+'</div>'
-   +(t.hinweis?'<p style="margin:6px 0 0">'+esc(t.hinweis)+'</p>':'')+b.dues.map(function(d){return '<span class="wn">Fahrerwechsel spätestens nach '+kmf(d.km)+' ab Teilung (gegen '+stamp(d.time)+').</span>';}).join('')+'</div><div>'+(S.teamRoutes[t.id]?mapBox('tm'+t.id,false,'Karte Weiterfahrt '+(t.name||'')):'')+'</div></div></div>';}).join(''):'';
- var dh='';
- R.dues.forEach(function(d,j){
-  dh+='<div class="due"><div class="two"><div><span class="tag" style="color:var(--warn-ink)">Fahrerwechsel fällig</span><b>spätestens bei '+kmf(d.km)+'</b><span class="small">gegen '+stamp(d.time)+', zwischen Station '+(d.after+1)+' und '+(d.after+2)+'. Ohne Wechsel wären es '+hm(d.run)+' am Stück. Die Suche startet 15 Minuten vor dieser Stelle, damit der Pausenort vor der Grenze liegt.</span>'
-   +((!C.on||C.role==='planer')?'<div class="row"><button type="button" class="primary" data-due="'+j+'">Pausenort hier suchen</button></div>':'')+'</div><div>'+(S.route?mapBox('due'+j,false,'Karte der fälligen Stelle'):'<span class="small">Ohne berechnete Route gibt es für diese Stelle keinen Kartenausschnitt.</span>')+'</div></div></div>';
- });
- $('dues').innerHTML=dh?'<h3>Fällige Fahrerwechsel ohne Pausenort</h3>'+dh:'';
+   +(t.hinweis?'<p style="margin:6px 0 0">'+esc(t.hinweis)+'</p>':'')+'</div><div>'+(S.teamRoutes[t.id]?mapBox('tm'+t.id,false,'Karte Weiterfahrt '+(t.name||'')):'')+'</div></div></div>';}).join(''):'';
  $('title').textContent='Roadbook Hinreise'+(S.name?' · '+S.name:'');
  ensureMapsSoon();
 }
-$('dues').addEventListener('click',function(e){var j=e.target.dataset.due;if(j==null)return;var d=sched().dues[+j];if(d)insertPause(d);});
 
 /* ---------- Einstellungen ---------- */
-var FIELDS=['name','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus'];
+var FIELDS=['name','date','time','speed','dwell','fahrer','pkw','lkw','bus'];
 FIELDS.forEach(function(k){var el=$(k);el.addEventListener('input',function(){S[k]=el.type==='number'&&el.value!==''?num(el.value):el.value;touch('konvoi');if(k==='pkw'||k==='lkw'||k==='bus'){drawFz();touch('fahrzeuge');}renderRoadbookSoon();});});
 var TF=[['tw','weight'],['th','height'],['tb','width'],['tl','length']];
 TF.forEach(function(m){var el=$(m[0]);el.addEventListener('input',function(){S.truck[m[1]]=el.value===''?'':num(el.value);touch('konvoi');});});
@@ -999,10 +1008,9 @@ async function buildPdf(opt){
  var nt=namedTeams();
  if(nt.length){head('Teams');table([{t:'Team',w:110,bold:true},{t:'Ziel',w:120},{t:'Konvoiteilung an',w:125},{t:'Fahrzeuge',w:160}],nt.map(function(t){var ab=t.ab?stationList().find(function(s){return s.key===t.ab;}):null;return{color:hexRgb(P0,t.farbe),cells:[t.name,t.ab?(t.ziel&&t.ziel.name||'offen'):(S.ziel.name||'Ziel'),ab?stName(ab):'–',teamFz(t.id).map(function(x){return (x.o.ruf||x.lab)+(x.o.kz?' ('+x.o.kz+')':'');}).join(', ')||'–']};}));}
  var hints=[];
- if(R.dues.length)hints.push(R.dues.length+' Fahrerwechsel noch ohne Pausenort: '+R.dues.map(function(d){return 'bei '+kmf(d.km)+' (gegen '+stamp(d.time)+')';}).join('; ')+'.');
+ if(needCard())hints.push(CARDTXT);
  if(S.route&&S.route.profile==='car')hints.push('Route als Pkw-Route berechnet, Lkw-Beschränkungen nicht berücksichtigt.');
- if(R.sunday)hints.push('Eine Station liegt auf einem Sonntag: Lkw-Sonntagsfahrverbot und Ausnahmegenehmigung prüfen.');
- if(hints.length){head('Hinweise');hints.forEach(function(h){para(h,9.5,false,warn,2);});}
+ if(hints.length){head('Hinweise');hints.forEach(function(h){para(h,9.5,false,h===CARDTXT?blue:warn,2);});}
  if(fresh('ov')){head('Übersicht');await img('ov',330);}
  /* Teams und Fahrzeuge */
  var fr=fzRows();
@@ -1043,7 +1051,7 @@ async function buildPdf(opt){
    y2-=box(MG,y2,'Abfahrt / Ankunft',stamp(a.dep)+'  /  '+stamp(b.arr),10.5);
    y=Math.min(y2,yR-6);
    var notes2=e.hints.map(function(h){return stName(h.s)+(h.s.o.note?': '+h.s.o.note:'');}).concat(e.splits.map(function(t){return 'Konvoiteilung: '+(t.name||'Team')+' fährt weiter nach '+(t.ziel&&t.ziel.name||'?');}));
-   if(b.dwell)notes2.push(label(b.s)+': '+Math.round(b.dwell)+' Min. Aufenthalt'+(isPause(b.s)?', Fahrerwechsel':''));
+   if(b.dwell)notes2.push(label(b.s)+': '+Math.round(b.dwell)+' Min. Aufenthalt'+(isPause(b.s)&&needCard()?', Fahrerkarte des neuen Fahrers stecken':''));
    notes2.forEach(function(n){para('> '+n,10,true,blue,0);});y-=6;
    var dh=colW*360/640,oh=Math.min(CW*360/640,y-MG-30-dh-40);
    await imgAt('et'+ei,MG,y-12,CW,oh,'ÜBERSICHT');y-=oh+30;
@@ -1053,7 +1061,6 @@ async function buildPdf(opt){
    np();band('Konvoiteilung',(t2.name||'Team')+' fährt weiter nach '+(t2.ziel&&t2.ziel.name||'?'),hexRgb(P0,t2.farbe));
    table([{t:'Ab',w:170},{t:'Nach',w:150},{t:'Strecke',w:90},{t:'Ankunft',w:105}],[{cells:[[stName(br.row.s),{t:stamp(br.row.dep),c:'m'}],t2.ziel&&t2.ziel.name||'–',br.km?[kmf(br.km),{t:hm(br.min),c:'m'}]:'–',br.km?stamp(br.arr):'–']}]);
    if(t2.hinweis)para(t2.hinweis,10,false,ink,4);
-   br.dues.forEach(function(d){para('Fahrerwechsel spätestens nach '+kmf(d.km)+' ab Teilung (gegen '+stamp(d.time)+')',9.5,false,warn,2);});
    var tf=teamFz(t2.id);if(tf.length){head('Fahrzeuge');vehTable(tf);}
    if(fresh('tm'+t2.id)){head('Strecke');await img('tm'+t2.id,330);}
   }
@@ -1339,7 +1346,7 @@ function initAll(){drawTank();fillFields();drawK();drawInfos();drawTeams();drawS
 if(LOGO){$('logo').src=LOGO;$('logo').hidden=false;}
 initAll();setTab((location.hash||'').slice(1));
 cloudInit();
-if(window.__RBTEST)window.__RBTEST={S:function(){return S;},C:C,sched:sched,insertPause:insertPause,buildPdf:buildPdf,ensureMaps:ensureMaps,wa:wa,getM:function(){return M;},getNeed:function(){return NEED;},flush:flush,q:function(){return{busy:!!mapQ,failed:mapsFailed};}};
+if(window.__RBTEST)window.__RBTEST={S:function(){return S;},C:C,sched:sched,buildPdf:buildPdf,ensureMaps:ensureMaps,wa:wa,getM:function(){return M;},getNeed:function(){return NEED;},flush:flush,q:function(){return{busy:!!mapQ,failed:mapsFailed};}};
 })();
 </script>
 
