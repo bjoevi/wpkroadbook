@@ -38,6 +38,15 @@ h3{font:700 14px/1.3 var(--f-head);margin:14px 0 6px}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:4px;overflow-x:auto}
 .tab{border:0;background:none;padding:10px 14px;font:600 14px var(--f-body);color:var(--mute);border-bottom:3px solid transparent;cursor:pointer;margin-bottom:-1px;border-radius:0;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.nav{position:relative;margin:4px 0 8px}
+.navbtn{display:flex;align-items:center;gap:10px;font:600 15px var(--f-body);padding:10px 14px;border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:220px}
+.navico{display:inline-grid;gap:3px}.navico i{display:block;width:16px;height:2px;background:var(--ink);border-radius:1px}
+.navcaret{margin-left:auto;color:var(--mute);font-size:12px}
+#navlist{position:absolute;top:calc(100% + 6px);left:0;z-index:30;display:flex;flex-direction:column;gap:2px;min-width:280px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.14);margin:0;overflow:visible}
+#navlist .tab{display:grid;text-align:left;border:0;border-left:3px solid transparent;border-radius:6px;padding:9px 12px;margin:0;color:var(--ink);white-space:normal}
+#navlist .tab b{font:600 15px var(--f-body)}#navlist .tab small{font-weight:400}
+#navlist .tab:hover{background:var(--soft)}
+#navlist .tab[aria-selected="true"]{background:var(--soft);border-left-color:var(--accent)}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;margin:12px 0}
 fieldset{border:0;margin:0;padding:0;min-width:0}
 label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
@@ -131,8 +140,8 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 .list button{text-align:left}
 @media (max-width:720px){
  h1{font-size:19px}
- .tabs{flex-wrap:wrap;overflow-x:visible;gap:0}
- .tab{padding:8px 9px;font-size:13px}
+ .navbtn{width:100%}
+ #navlist{right:0}
  table.cards{min-width:0!important;width:100%}
  table.cards thead{display:none}
  table.cards,table.cards tbody{display:block}
@@ -177,13 +186,16 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 </section>
 
 <div id="app">
-<div class="tabs" role="tablist">
-<button class="tab" role="tab" id="tab-planung" data-tab="planung" aria-selected="true">Planung</button>
-<button class="tab" role="tab" id="tab-roadbook" data-tab="roadbook" aria-selected="false">Roadbook</button>
-<button class="tab" role="tab" id="tab-paeckchen" data-tab="paeckchen" aria-selected="false">Päckchen zählen</button>
-<button class="tab" role="tab" id="tab-tanken" data-tab="tanken" aria-selected="false">Tankprotokoll</button>
-<button class="tab" role="tab" id="tab-abrechnung" data-tab="abrechnung" aria-selected="false">Abrechnung</button>
+<nav class="nav" aria-label="Bereiche">
+<button type="button" class="navbtn" id="navbtn" aria-haspopup="true" aria-expanded="false" aria-controls="navlist"><span class="navico" aria-hidden="true"><i></i><i></i><i></i></span><span id="navcur">Planung</span><span class="navcaret" aria-hidden="true">▾</span></button>
+<div class="tabs" id="navlist" role="menu" hidden>
+<button class="tab" role="menuitem" id="tab-planung" data-tab="planung" aria-selected="true"><b>Planung</b><small>Strecke, Stopps, Teams, Fahrzeuge</small></button>
+<button class="tab" role="menuitem" id="tab-roadbook" data-tab="roadbook" aria-selected="false"><b>Roadbook</b><small>Zeitplan, Karten, PDF</small></button>
+<button class="tab" role="menuitem" id="tab-paeckchen" data-tab="paeckchen" aria-selected="false"><b>Päckchen zählen</b><small>Ladeliste, Ladeplan, Abgaben</small></button>
+<button class="tab" role="menuitem" id="tab-tanken" data-tab="tanken" aria-selected="false"><b>Tankprotokoll</b><small>Tankeinträge je Fahrzeug</small></button>
+<button class="tab" role="menuitem" id="tab-abrechnung" data-tab="abrechnung" aria-selected="false"><b>Abrechnung</b><small>Auslagenerstattung, PDF, Excel</small></button>
 </div>
+</nav>
 <div id="toasts"></div>
 <p id="rolehint" class="info" hidden>Du hast Lesezugriff. Die Planung ändert die Konvoileitung; Päckchen-Abgaben kannst du erfassen.</p>
 
@@ -1517,9 +1529,15 @@ var TABS=['planung','roadbook','paeckchen','tanken','abrechnung'];
 function setTab(n){
  if(TABS.indexOf(n)<0)n='planung';
  TABS.forEach(function(k){$('v-'+k).hidden=k!==n;$('tab-'+k).setAttribute('aria-selected',k===n?'true':'false');});
+ var tb=$('tab-'+n).querySelector('b');$('navcur').textContent=tb?tb.textContent:n;
  if(n==='paeckchen'){drawAbg();drawLadeplan();}if(n==='tanken')drawTank();if(n==='abrechnung')drawAbr();if(n==='roadbook')renderRoadbook();
 }
-document.querySelector('.tabs').addEventListener('click',function(e){var n=e.target.dataset.tab;if(!n)return;setTab(n);try{location.hash=n;}catch(x){}});
+function navOpen(o){$('navlist').hidden=!o;$('navbtn').setAttribute('aria-expanded',o?'true':'false');if(o){var sel=$('navlist').querySelector('[aria-selected="true"]');if(sel)sel.focus();}}
+$('navbtn').addEventListener('click',function(){navOpen($('navlist').hidden);});
+$('navlist').addEventListener('click',function(e){var b=e.target.closest('[data-tab]');if(!b)return;setTab(b.dataset.tab);navOpen(false);$('navbtn').focus();try{location.hash=b.dataset.tab;}catch(x){}});
+$('navlist').addEventListener('keydown',function(e){var items=[].slice.call($('navlist').querySelectorAll('.tab')),i=items.indexOf(document.activeElement);
+ if(e.key==='ArrowDown'){e.preventDefault();items[(i+1)%items.length].focus();}else if(e.key==='ArrowUp'){e.preventDefault();items[(i-1+items.length)%items.length].focus();}else if(e.key==='Escape'){navOpen(false);$('navbtn').focus();}});
+document.addEventListener('click',function(e){if(!$('navlist').hidden&&!e.target.closest('.nav'))navOpen(false);});
 window.addEventListener('hashchange',function(){if(/access_token|type=/.test(location.hash))return;setTab((location.hash||'').slice(1));});
 
 function initAll(){drawTank();fillFields();drawK();drawInfos();drawTeams();drawStations();renderRoadbook();drawBest();drawAbg();calcPk();drawLadeplan();applyRole();}
