@@ -126,8 +126,6 @@ th{font-size:12px;color:var(--mute);font-weight:600}
 .abg1{display:grid;gap:8px 10px;grid-template-columns:150px 1fr 1fr 90px}.abg2{display:grid;gap:8px 10px;grid-template-columns:140px 1fr 150px}
 .abpos textarea{min-height:56px}
 .fbadge{display:inline-block;min-width:20px;padding:1px 6px;border-radius:4px;font:700 12px/18px var(--f-head);text-align:center;color:#fff;background:#5b6770;margin-right:6px;vertical-align:1px}.fbadge.tp{background:#0a4fa3;color:#ffd84d}.fbadge.sg{background:#1d5c45}
-.tkrow-sg td:first-child{box-shadow:inset 3px 0 0 #1d5c45}
-@media (max-width:720px){.tkrow-sg td:first-child{box-shadow:none}table.cards tr.tkrow-sg{border-left:4px solid #1d5c45}}
 .covbox{display:flex;gap:14px;align-items:flex-start;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.covbox canvas{width:150px;height:auto;aspect-ratio:210/297;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.25);flex:0 0 auto;background:var(--line)}.covbox>div{min-width:0}.covbox p{margin:4px 0 8px}
 .vhf{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
 .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:10px 0}
@@ -253,12 +251,6 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <div class="row"><button type="button" class="primary" id="btnRoute">Route berechnen</button></div>
 <p id="rmsg" class="small" style="margin-top:8px" aria-live="polite"></p></div>
 
-<div class="panel" id="tankpanel"><h2>Tankstellen entlang der Route</h2>
-<p class="small" style="margin-top:-4px">Getankt wird möglichst an Raststätten und Autohöfen des Tankpool-Netzes, weil der Diesel dort für uns günstiger ist. Die Suche findet entlang der berechneten Route Tankpool-Tankstellen (<span class="fbadge tp">T</span>), Autohöfe bzw. Lkw-Tankstellen (<span class="fbadge">A</span>) und Tankstellen an Raststätten (<span class="fbadge">R</span>) aus OpenStreetMap. Tankpool-Stationen werden bei den Vorschlägen bevorzugt und erscheinen auf den Karten.</p>
-<div class="g"><div><label for="tankNetz">Bevorzugtes Tankstellennetz</label><input id="tankNetz" placeholder="Tankpool"></div><div><label for="tankKm">Tanken etwa alle (km)</label><input id="tankKm" type="number" min="100" max="3000" step="50" placeholder="500"></div></div>
-<div class="row"><button type="button" class="primary" id="btnTank">Tankstellen suchen</button><label style="display:inline-flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" id="tankOnlyTp"> nur Tankpool und Vorschläge zeigen</label></div>
-<p id="tmsg" class="small" aria-live="polite"></p>
-<div id="tanklist"></div></div>
 
 <div class="panel"><h2>Infoseiten</h2>
 <p class="small" style="margin-top:-4px">Erscheinen im PDF nach den Etappen. Zeilen mit „- “ am Anfang werden zu Aufzählungspunkten.</p>
@@ -277,7 +269,7 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <div class="sum" id="sum"></div>
 <div id="okontakt"></div>
 <div id="oteams"></div>
-<div id="oov"></div><div id="otank"></div>
+<div id="oov"></div>
 <h3>Zeitplan</h3>
 <div id="tl"></div>
 <div id="obranch"></div>
@@ -366,7 +358,7 @@ function kIsPreset(k){var n=(k.name||'').trim().toLowerCase();if(k.tel==='112'||
  if(KLEITUNG.some(function(x){return x[1].toLowerCase()===n;}))return true;return Object.keys(KTOUR).some(function(r){return KTOUR[r].some(function(x){return x[0].toLowerCase()===n;});});}
 function kSync(){var manual=S.kontakte.filter(function(k){return (k.rolle||k.name||k.tel)&&!kIsPreset(k);});S.kontakte=kPreset().concat(manual);}
 function rid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
-function D0(){return{name:'',region:'',cover:'',tankNetz:'',tankKm:'',tankst:null,date:'',time:'',speed:'',maxh:'',dwell:'',fahrer:'',pkw:'',lkw:'',bus:'',
+function D0(){return{name:'',region:'',cover:'',date:'',time:'',speed:'',maxh:'',dwell:'',fahrer:'',pkw:'',lkw:'',bus:'',
  truck:{weight:'',height:'',width:'',length:''},
  start:{name:'',lat:null,lon:null},vias:[],ziel:{name:'',lat:null,lon:null},
  legKm:[0],route:null,teamRoutes:{},fz:{pkw:[],lkw:[],bus:[]},teams:[],kontakte:[{rolle:'',name:'',tel:''}],
@@ -386,7 +378,7 @@ var REG_NEUTRAL={flag:['#1e5c4a','#c8a24a'],sky:['#14283a','#4f7590','#d8dde0'],
 function regionOf(){return REGIONS[S.region]?S.region:'';}
 function tourLabel(){var r=regionOf(),y=String(S.date||'').slice(0,4);return r?r+(y?' '+y:''):(S.name||'');}
 function dwellDef(){return S.dwell===''||S.dwell==null?DEF.dwell:num(S.dwell);}
-var SECT={konvoi:['name','region','tankNetz','tankKm','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus','truck','kontakte','infos'],strecke:['start','vias','ziel','legKm'],route:['route','teamRoutes'],fahrzeuge:['fz','teams'],bestand:['bestand','paletten'],unterkunft:['unterkuenfte'],titelbild:['cover'],tankstellen:['tankst']};
+var SECT={konvoi:['name','region','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus','truck','kontakte','infos'],strecke:['start','vias','ziel','legKm'],route:['route','teamRoutes'],fahrzeuge:['fz','teams'],bestand:['bestand','paletten'],unterkunft:['unterkuenfte'],titelbild:['cover']};
 var S,M={},P={tiles:'osm'},netBlocked=false,mapsFailed=false,busy=false;
 function $(i){return document.getElementById(i);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -459,7 +451,7 @@ async function flush(){
   saveCache();C.errShown=false;C.lastSave=new Date();setSync('ok',syncLabel()+' · gespeichert '+tfmt.format(C.lastSave));
  }finally{flushing=false;}
 }
-function secName(sec){return {konvoi:'Konvoi und Infos',strecke:'Strecke',route:'Route',fahrzeuge:'Fahrzeuge',bestand:'Ladeliste',unterkunft:'Übernachtungen',titelbild:'Titelbild',tankstellen:'Tankstellen'}[sec]||(/^tank:/.test(sec)?'Tankprotokoll':'Abgabe');}
+function secName(sec){return {konvoi:'Konvoi und Infos',strecke:'Strecke',route:'Route',fahrzeuge:'Fahrzeuge',bestand:'Ladeliste',unterkunft:'Übernachtungen',titelbild:'Titelbild'}[sec]||(/^tank:/.test(sec)?'Tankprotokoll':'Abgabe');}
 function toast(t){var n=document.createElement('div');n.className='note';n.setAttribute('role','status');n.textContent=t;$('toasts').appendChild(n);setTimeout(function(){n.remove();},10000);}
 async function reloadSection(sec){forceFill=true;
  var r=await C.client.from('daten').select('bereich,inhalt,version').eq('konvoi_id',C.konvoi.id).eq('bereich',sec);
@@ -485,7 +477,6 @@ function rerender(sec){
  keepFocus(function(){
   if(sec==='konvoi'){fillFields(forceFill);drawK();drawInfos();drawFz();drawCoverPrev();}
   else if(sec==='titelbild'){drawCoverPrev();}
-  else if(sec==='tankstellen'){drawTankList();renderRoadbookSoon();ensureMapsSoon();}
   else if(sec==='strecke'||sec==='route'){drawStations();drawTeams();}
   else if(sec==='fahrzeuge'){drawTeams();drawUnterkunft();}
   else if(sec==='unterkunft'){drawUnterkunft();}
@@ -596,7 +587,7 @@ $('btnKnew').addEventListener('click',async function(){
  if(r.error){$('kmsg').textContent='Anlegen fehlgeschlagen: '+r.error.message;return;}
  $('kname').value='';
  await openKonvoi(r.data);
- if(local){mergeInto(local);S.name=n;initAll();touch('konvoi','strecke','route','fahrzeuge','bestand','unterkunft','titelbild','tankstellen');S.abgaben.forEach(function(a){touch('abgabe:'+a.id);});}
+ if(local){mergeInto(local);S.name=n;initAll();touch('konvoi','strecke','route','fahrzeuge','bestand','unterkunft','titelbild');S.abgaben.forEach(function(a){touch('abgabe:'+a.id);});}
 });
 $('btnSwitch').addEventListener('click',async function(){if(!C.client||!C.user)return;await flush();leaveKonvoi();try{localStorage.removeItem('roadbook-konvoi');var u=new URL(location.href);u.searchParams.delete('k');history.replaceState(null,'',u.toString());}catch(e){}chooseKonvoi(null);});
 $('btnLogout').addEventListener('click',async function(){if(!C.client)return;await flush();leaveKonvoi();await C.client.auth.signOut();show('v-auth');});
@@ -689,9 +680,6 @@ async function renderMap(job){
   [['rgba(255,255,255,.9)',L.w+4],[L.col,L.w]].forEach(function(st){
    g.beginPath();for(var i=0;i<Pp.length;i++){var p=px(Pp[i][0],Pp[i][1],v.z);if(i)g.lineTo(p[0]-x0,p[1]-y0);else g.moveTo(p[0]-x0,p[1]-y0);}
    g.strokeStyle=st[0];g.lineWidth=st[1];g.stroke();});});
- (job.fuel||[]).forEach(function(f){var p=px(f.lat,f.lon,v.z),x=p[0]-x0,y=p[1]-y0,s=f.c===1?20:16;
-  g.fillStyle=f.c===1?'#0a4fa3':'#5b6770';g.strokeStyle='#fff';g.lineWidth=2.5;g.beginPath();if(g.roundRect)g.roundRect(x-s/2,y-s/2,s,s,4);else g.rect(x-s/2,y-s/2,s,s);g.fill();g.stroke();
-  g.fillStyle=f.c===1?'#ffd84d':'#fff';g.font='bold '+(f.c===1?13:11)+'px Inter,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(f.c===1?'T':f.c===2?'A':'R',x,y+0.5);});
  (job.markers||[]).forEach(function(m){
   var p=px(m.lat,m.lon,v.z),x=p[0]-x0,y=p[1]-y0,r=m.label.length>1?13:11;
   g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=m.col;g.fill();g.lineWidth=3;g.strokeStyle='#fff';g.stroke();
@@ -737,8 +725,7 @@ function buildJobs(){
  });
  S.teams.forEach(function(t){var r=S.teamRoutes[t.id];if(!r||!r.pts||!r.pts.length)return;var v=fitView(sampled(r.pts,300),640,360);if(v)J['tm'+t.id]={key:'tm'+t.id,view:v,lines:[{pts:r.pts,col:t.farbe||'#555',w:4}],markers:[{lat:r.pts[0][0],lon:r.pts[0][1],label:'K',col:'#1d5c45'},{lat:r.pts[r.pts.length-1][0],lon:r.pts[r.pts.length-1][1],label:'Z',col:t.farbe||'#555'}]};});
  S.unterkuenfte.forEach(function(u,i){if(u.lat==null)return;J['u'+u.id]={key:'u'+u.id,view:{lat:u.lat,lon:u.lon,z:Math.min(17,tsrc().max),w:640,h:360},markers:[{lat:u.lat,lon:u.lon,label:'H',col:'#6a1b9a'}],lines:[]};});
- var TR=tankRows();if(TR.length){for(var k0 in J){var jv=J[k0],cats=k0==='ov'?[1]:(jv.view.z>=15?[1,2,3]:[1,2,3]);if(/^u/.test(k0))continue;var bb=viewBox(jv.view);jv.fuel=TR.filter(function(f){return cats.indexOf(f.c)>=0&&f.la>=bb[0]&&f.la<=bb[1]&&f.lo>=bb[2]&&f.lo<=bb[3];}).map(function(f){return{lat:f.la,lon:f.lo,c:f.c};});}}
- for(var k in J){J[k].sig=JSON.stringify([J[k].view,J[k].markers,J[k].fuel||0,rs,(J[k].lines||[]).map(function(l){return l.col+l.pts.length;})]);}
+ for(var k in J){J[k].sig=JSON.stringify([J[k].view,J[k].markers,rs,(J[k].lines||[]).map(function(l){return l.col+l.pts.length;})]);}
  return J;
 }
 function mapStoreKey(){return C.konvoi?MKEY+'-'+C.konvoi.id:MKEY;}
@@ -936,101 +923,17 @@ async function computeRoute(){
 }
 async function runRoute(){
  if(busy||(C.on&&C.role!=='planer'))return;busy=true;$('btnRoute').disabled=true;
- try{rmsg('Route wird berechnet …');var f=await computeRoute();touch('strecke','route');drawStations();drawTeams();renderRoadbook();drawTankList();
+ try{rmsg('Route wird berechnet …');var f=await computeRoute();touch('strecke','route');drawStations();drawTeams();renderRoadbook();
   rmsg('<span class="ok">Route berechnet.</span>'+(f?' '+f+' Team-Weiterfahrten ließen sich nicht berechnen.':''));
-  if(tankStale())setTimeout(function(){tankSearch(true);},400);
  }catch(e){rmsg(esc(/^Bitte/.test(e.message)?e.message:netMsg(e)),'err');}
  busy=false;$('btnRoute').disabled=false;
 }
 $('btnRoute').addEventListener('click',function(){runRoute();});
 
-/* ---------- Tankstellen entlang der Route (Tankpool bevorzugt) ---------- */
-function netzName(){return String(S.tankNetz||'').trim()||'Tankpool';}
-function netzRx(){return netzName().toLowerCase().replace(/[^a-z0-9äöüß ]/g,'').trim().split(/\s+/).join('[ -]?')||'tank ?pool';}
-function isNetz(t){var rx=new RegExp(netzRx(),'i');if(['brand','name','operator','network','brand:wikidata'].some(function(k){return t[k]&&rx.test(t[k]);}))return true;return Object.keys(t).some(function(k){return rx.test(k)&&t[k]!=='no';});}
-function viewBox(v){var c=px(v.lat,v.lon,v.z),a=ll(c[0]-v.w/2,c[1]-v.h/2,v.z),b=ll(c[0]+v.w/2,c[1]+v.h/2,v.z);return[b[0],a[0],a[1],b[1]];}
-var tkCache={k:'',rows:[]};
-function tankRows(){var T=S.tankst,R=S.route;if(!T||!T.list||!R||!R.pts||R.pts.length<2)return[];
- var key=routeSig()+'|'+T.at+'|'+T.list.length;if(tkCache.k===key)return tkCache.rows;
- var rows=[];T.list.forEach(function(f){var best=1e18,bi=0,cl=Math.cos(f.la*Math.PI/180);for(var i=0;i<R.pts.length;i++){var dy=R.pts[i][0]-f.la,dx=(R.pts[i][1]-f.lo)*cl,d=dy*dy+dx*dx;if(d<best){best=d;bi=i;}}
-  var km=R.cum[bi];[bi-1,bi].forEach(function(i0){if(i0<0||i0+1>=R.pts.length)return;var A=R.pts[i0],B=R.pts[i0+1],bx=(B[1]-A[1])*cl,by=B[0]-A[0],px0=(f.lo-A[1])*cl,py0=f.la-A[0],L2=bx*bx+by*by,t=L2?Math.max(0,Math.min(1,(px0*bx+py0*by)/L2)):0,dx=px0-t*bx,dy=py0-t*by,d=dx*dx+dy*dy;if(d<best){best=d;km=R.cum[i0]+t*(R.cum[i0+1]-R.cum[i0]);}});
-  var off=Math.sqrt(best)*111.2;if(off>(f.c===1?6:2.5))return;rows.push(Object.assign({km:km,off:off},f));});
- rows.sort(function(a,b){return a.km-b.km;});tkCache={k:key,rows:rows};return rows;}
-function tankSuggest(rows){var tot=S.route?S.route.cum[S.route.cum.length-1]:0,iv=num(S.tankKm)||500,out=[],last=0,guard=0;
- while(last+iv<tot-iv*0.25&&guard++<40){var lo=last+iv*0.55,hi=last+iv,c1=rows.filter(function(r){return r.c===1&&r.km>lo&&r.km<=hi;}),c2=rows.filter(function(r){return r.c!==1&&r.km>lo&&r.km<=hi;});
-  var pick=c1.length?c1[c1.length-1]:c2.length?c2.sort(function(a,b){return a.off-b.off||b.km-a.km;})[0]:rows.filter(function(r){return r.km>hi;})[0];if(!pick)break;out.push(pick);last=pick.km;}
- return out;}
-function tankStale(){var T=S.tankst,st=stationList(),a=st[0].o,b=st[st.length-1].o;if(!S.route)return false;if(!T||!T.list)return true;var tot=S.route.cum[S.route.cum.length-1];return T.netz!==netzName()||!T.von||(T.total&&Math.abs(tot-T.total)>Math.max(15,T.total*0.03))||hav([T.von.la,T.von.lo],[a.lat,a.lon])>5||hav([T.nach.la,T.nach.lo],[b.lat,b.lon])>5;}
-var OVPS=[OVP,'https://overpass.private.coffee/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
-async function ovpQuery(q,ms){var last=null;
- for(var i=0;i<OVPS.length;i++){var c=new AbortController(),t=setTimeout(function(){c.abort();},ms||60000);
-  try{var r=await fetch(OVPS[i],{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q),signal:c.signal});
-   if(!r.ok){var tx='';try{tx=(await r.text()).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,120);}catch(e2){}throw new Error('HTTP '+r.status+(tx?' '+tx:''));}
-   var j=await r.json();if(j&&j.remark&&/runtime error|timed out|out of memory/i.test(j.remark)&&!(j.elements&&j.elements.length))throw new Error(j.remark.slice(0,120));
-   clearTimeout(t);return j;}
-  catch(e){clearTimeout(t);last=e&&e.name==='AbortError'?new Error('Zeitüberschreitung'):(e&&e.name==='TypeError'?new Error('keine Verbindung zu '+OVPS[i].split('/')[2]):e);}
- }
- throw last||new Error('unbekannter Fehler');}
-function tmsg(h,c){var m=$('tmsg');if(m){m.className='small '+(c||'');m.innerHTML=h;}}
-var tankBusy=false;
-async function tankSearch(auto){
- if(tankBusy||(C.on&&C.role!=='planer'))return;var R=S.route;if(!R||!R.pts||R.pts.length<2){tmsg('Erst die Route berechnen, dann werden die Tankstellen entlang der Strecke gesucht.');return;}
- tankBusy=true;var bt=$('btnTank');if(bt)bt.disabled=true;
- try{var smp=[],lastKm=-99;for(var i=0;i<R.pts.length;i++){if(R.cum[i]-lastKm>=2.5||i===R.pts.length-1){smp.push(R.pts[i]);lastKm=R.cum[i];}}
-  var chunks=[];for(var k=0;k<smp.length;k+=60)chunks.push(smp.slice(Math.max(0,k-1),k+60));
-  var rx=netzRx(),found={},svcs=[],fails=[];
-  for(var ci=0;ci<chunks.length;ci++){tmsg((auto?'Route berechnet. ':'')+'Suche Tankstellen in OpenStreetMap, Abschnitt '+(ci+1)+' von '+chunks.length+' …'+(fails.length?' ('+fails.length+' Abschnitt(e) nicht geladen)':''));
-   var L=chunks[ci].map(function(p){return p[0].toFixed(4)+','+p[1].toFixed(4);}).join(',');
-   var q='[out:json][timeout:60];(nwr["highway"="services"](around:1200,'+L+');)->.svc;.svc out center tags;(nwr["amenity"="fuel"][~"^(brand|name|operator|network)$"~"'+rx+'",i](around:5000,'+L+');nwr["amenity"="fuel"]["hgv"~"yes|designated"](around:1500,'+L+');nwr["amenity"="fuel"](around.svc:600););out center tags;';
-   var j;try{j=await ovpQuery(q,70000);}catch(e){fails.push('Abschnitt '+(ci+1)+': '+(e.message||e));continue;}
-   (j.elements||[]).forEach(function(el){var t=el.tags||{},la=el.lat!=null?el.lat:(el.center&&el.center.lat),lo=el.lon!=null?el.lon:(el.center&&el.center.lon);if(la==null)return;
-    if(t.highway==='services'){svcs.push({la:la,lo:lo,n:t.name||'',ref:t.ref||''});return;}
-    if(t.amenity!=='fuel')return;found[el.type[0]+el.id]={id:el.type[0]+el.id,t:t,la:la,lo:lo};});
-  }
-  if(fails.length===chunks.length)throw new Error('Kein Abschnitt konnte geladen werden. '+fails[0]);
-  var list=[];Object.keys(found).forEach(function(id){var f=found[id],t=f.t,sv=null,sd=1e9;svcs.forEach(function(s2){var d=hav([f.la,f.lo],[s2.la,s2.lo]);if(d<sd){sd=d;sv=s2;}});var atSvc=sv&&sd<0.7;
-   var c=isNetz(t)?1:atSvc?3:(/^(yes|designated)$/.test(t.hgv||'')?2:0);if(!c)return;
-   var nm=t.name||t.brand||t.operator||(atSvc&&sv.n?'Tankstelle '+sv.n:'Tankstelle');
-   var ad=[t['addr:street']?(t['addr:street']+' '+(t['addr:housenumber']||'')).trim():'',[t['addr:postcode'],t['addr:city']].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-   list.push({id:id,n:nm,b:t.brand||'',c:c,la:Math.round(f.la*1e5)/1e5,lo:Math.round(f.lo*1e5)/1e5,svc:atSvc?(sv.n||'Raststätte'):'',ref:(atSvc&&sv.ref)||'',a:ad,h:/^(yes|designated)$/.test(t.hgv||''),o:t.opening_hours==='24/7'});});
-  var uq=[];list.sort(function(a,b){return a.c-b.c;}).forEach(function(x){if(!uq.some(function(u){return u.c===x.c&&hav([u.la,u.lo],[x.la,x.lo])<0.12;}))uq.push(x);});
-  var st=stationList(),a=st[0].o,b=st[st.length-1].o;
-  S.tankst={at:new Date().toISOString(),netz:netzName(),total:R.cum[R.cum.length-1],von:{la:a.lat,lo:a.lon},nach:{la:b.lat,lo:b.lon},list:uq};touch('tankstellen');
-  var rows=tankRows();tmsg((fails.length?'<span class="err">'+fails.length+' von '+chunks.length+' Abschnitten konnten nicht geladen werden ('+esc(fails[0])+'). Bitte später „Tankstellen neu suchen“.</span><br>':'')+'<span class="ok">'+rows.filter(function(r){return r.c===1;}).length+' '+esc(netzName())+'-Tankstellen und '+rows.filter(function(r){return r.c!==1;}).length+' weitere Lkw-Tankstellen entlang der Route gefunden.</span>'+(rows.some(function(r){return r.c===1;})?'':' <span class="small" style="display:inline">Keine '+esc(netzName())+'-Station in OpenStreetMap eingetragen. Vorgeschlagen werden deshalb Autohöfe und Raststätten.</span>'));
-  drawTankList();renderRoadbookSoon();ensureMapsSoon();
- }catch(e){tmsg('Die Tankstellensuche ist fehlgeschlagen: '+esc(e.message||String(e))+' Die Suche lässt sich mit „Tankstellen suchen“ wiederholen.','err');}
- tankBusy=false;if(bt)bt.disabled=false;
-}
-function fKind(r){return r.c===1?netzName()+(r.svc?' · Raststätte':r.h?' · Autohof/Lkw':''):r.c===2?'Autohof / Lkw-Tankstelle':'Raststätte';}
-function fBadge(r){return '<span class="fbadge'+(r.c===1?' tp':'')+'">'+(r.c===1?'T':r.c===2?'A':'R')+'</span>';}
-function fLage(r){return [r.ref?'an der '+r.ref:'',r.svc&&r.svc!==r.n?r.svc:'',r.a,r.off>=0.3?String(Math.round(r.off*10)/10).replace('.',',')+' km neben der Route':''].filter(Boolean).join(' · ');}
-function planned(r){return S.vias.some(function(v){return v.lat!=null&&hav([v.lat,v.lon],[r.la,r.lo])<0.3;});}
-function drawTankList(){
- var host=$('tanklist');if(!host)return;var bt=$('btnTank');if(bt)bt.textContent=S.tankst&&S.tankst.list?'Tankstellen neu suchen':'Tankstellen suchen';
- var rows=tankRows();
- if(!S.route){host.innerHTML='<p class="mute">Nach der Routenberechnung werden die Tankstellen entlang der Strecke automatisch gesucht.</p>';return;}
- if(!S.tankst||!S.tankst.list){host.innerHTML='<p class="mute">Noch nicht gesucht.</p>';return;}
- if(tankStale())tmsg('Start, Ziel oder Netz haben sich geändert. Bitte „Tankstellen neu suchen“.','');
- var sg=tankSuggest(rows),only=$('tankOnlyTp')&&$('tankOnlyTp').checked,show=rows.filter(function(r){return !only||r.c===1||sg.indexOf(r)>=0;});
- var h='<h3>Vorschläge für Tankstopps (etwa alle '+(num(S.tankKm)||500)+' km)</h3>';
- h+=sg.length?'<div class="scroll"><table class="cards"><thead><tr><th>km</th><th>Tankstelle</th><th>Lage</th><th></th></tr></thead><tbody>'+sg.map(function(r){return '<tr class="tkrow-sg"><td><b>'+kmf(r.km)+'</b></td><td>'+fBadge(r)+'<b>'+esc(r.n)+'</b><br><span class="small" style="display:inline">'+esc(fKind(r))+'</span></td><td>'+esc(fLage(r))+'</td><td>'+(planned(r)?'<span class="ok small" style="display:inline">als Stopp geplant</span>':'<button type="button" class="mini" data-tkadd="'+r.id+'">Als Tankstopp übernehmen</button>')+'</td></tr>';}).join('')+'</tbody></table></div>'
-  :'<p class="mute">Die Strecke ist kürzer als das Tankintervall, oder es wurden keine passenden Tankstellen gefunden.</p>';
- if(sg.length&&!sg.every(function(r){return r.c===1;}))h+='<p class="small">Wo im Abschnitt keine '+esc(netzName())+'-Tankstelle liegt, wird ein Autohof oder eine Raststätte vorgeschlagen.</p>';
- h+='<details><summary>Alle gefundenen Tankstellen ('+show.length+')</summary>';
- h+=show.length?'<div class="scroll"><table class="cards"><thead><tr><th>km</th><th>Tankstelle</th><th>Lage</th><th></th></tr></thead><tbody>'+show.map(function(r){return '<tr'+(sg.indexOf(r)>=0?' class="tkrow-sg"':'')+'><td>'+kmf(r.km)+'</td><td>'+fBadge(r)+esc(r.n)+'<br><span class="small" style="display:inline">'+esc(fKind(r))+(r.o?' · 24 h':'')+'</span></td><td>'+esc(fLage(r))+'</td><td>'+(planned(r)?'<span class="ok small" style="display:inline">geplant</span>':'<button type="button" class="mini" data-tkadd="'+r.id+'">Übernehmen</button>')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="mute">Keine Treffer.</p>';
- h+='</details><p class="small">Quelle: OpenStreetMap, Stand der Suche '+esc(new Date(S.tankst.at).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}))+'. Nicht jede Tankpool-Station ist dort eingetragen. Vor der Fahrt im Tankpool-Stationsfinder prüfen.</p>';
- host.innerHTML=h;cardLabels(host);
-}
-function tankAdd(id){var r=tankRows().find(function(x){return x.id===id;});if(!r)return;
- var R=sched(),rows=R.rows,i=0;for(var k=0;k<rows.length-1;k++){if(rows[k].km<=r.km)i=k;}
- fixLeg();var a=rows[i].km,b=rows[i+1]?rows[i+1].km:a,leg=num(S.legKm[i]);
- var v=newVia('tanken');v.name=r.n+(r.c===1?' ('+netzName()+')':'');v.lat=r.la;v.lon=r.lo;v.addr=r.a||'';v.note=[fKind(r),r.ref?'an der '+r.ref:''].filter(Boolean).join(', ');
- S.vias.splice(i,0,v);S.legKm.splice(i,1,Math.round(Math.max(0,r.km-a)*10)/10,Math.round(Math.max(0,(b-r.km))*10)/10);
- touch('strecke');drawStations();drawTeams();renderRoadbook();drawTankList();tmsg('<span class="ok">Tankstopp bei km '+kmf(r.km)+' eingefügt.</span> Die Route wird neu berechnet.');
- geoChanged();touch('route');scheduleRoute();}
-$('btnTank').addEventListener('click',function(){tankSearch(false);});
-$('tankOnlyTp').addEventListener('change',drawTankList);
-$('tanklist').addEventListener('click',function(e){var id=e.target.dataset.tkadd;if(id){if(C.on&&C.role!=='planer')return;tankAdd(id);}});
+/* Tankpool-Bevorzugung bei der Suche „Tankstellen in der Nähe“ */
+function netzName(){return 'Tankpool';}
+function netzRx(){return 'tank[ -]?pool';}
+function isNetz(t){var rx=new RegExp(netzRx(),'i');return ['brand','name','operator','network'].some(function(k){return t[k]&&rx.test(t[k]);});}
 
 /* Teams wurden entfernt; leere Funktionen halten bestehende Aufrufe gültig */
 function teamById(){return null;}
@@ -1109,8 +1012,6 @@ function renderRoadbook(){
   return '<div class="uout"><div class="two"><div><span class="tag">'+esc(u.art||'Unterkunft')+'</span><span class="num">'+esc(u.name||'Unterkunft ohne Namen')+'</span><div class="times">'+(uZeitraum(u)?'<span>Zeitraum</span><b>'+esc(uZeitraum(u))+'</b>':'')+(u.addr?'<span>Adresse</span><b style="font-weight:500">'+esc(u.addr)+'</b>':'')+(u.tel?'<span>Telefon</span><b class="tel">'+esc(u.tel)+'</b>':'')
    +(u.lat!=null?'<span>Koord.</span><b>'+u.lat.toFixed(5)+', '+u.lon.toFixed(5)+' · <a href="https://www.openstreetmap.org/?mlat='+u.lat+'&mlon='+u.lon+'#map=17/'+u.lat+'/'+u.lon+'" target="_blank" rel="noopener">OSM</a></b>':'')+'</div>'+(u.hinweis?'<p style="margin:6px 0 0">'+esc(u.hinweis)+'</p>':'')+'</div><div>'+(u.lat!=null?mapBox('u'+u.id,false,'Karte '+(u.name||'Unterkunft')):'')+'</div></div>'
    +(rooms.length?'<div class="scroll"><table style="margin-top:8px"><thead><tr><th>Zimmer</th><th>Art</th><th>Belegung</th><th>Bemerkung</th></tr></thead><tbody>'+rooms.map(function(z){return '<tr><td>'+esc(z.nr||'–')+'</td><td>'+(z.typ==='EZ'?'Einzelzimmer':'Doppelzimmer')+'</td><td><b>'+esc([z.p1,z.typ==='EZ'?'':z.p2].filter(Boolean).join(', ')||'–')+'</b></td><td>'+esc(z.bem||'')+'</td></tr>';}).join('')+'</tbody></table></div><p class="small">'+st.dz+' Doppelzimmer, '+st.ez+' Einzelzimmer, '+st.pers.length+' Personen</p>':'')+'</div>';}).join(''):'';
- var TRr=tankRows(),TRs=tankSuggest(TRr),TRl=TRr.filter(function(r){return r.c===1||TRs.indexOf(r)>=0;});
- $('otank').innerHTML=TRl.length?'<h3>Tanken unterwegs ('+esc(netzName())+' bevorzugt)</h3><p class="small">Auf den Karten: <span class="fbadge tp">T</span>'+esc(netzName())+' <span class="fbadge">A</span>Autohof / Lkw-Tankstelle <span class="fbadge">R</span>Raststätte</p><div class="scroll"><table class="cards"><thead><tr><th>km</th><th>Tankstelle</th><th>Lage</th></tr></thead><tbody>'+TRl.map(function(r){return '<tr'+(TRs.indexOf(r)>=0?' class="tkrow-sg"':'')+'><td>'+kmf(r.km)+(TRs.indexOf(r)>=0?'<br><span class="small ok" style="display:inline">Vorschlag</span>':'')+'</td><td>'+fBadge(r)+esc(r.n)+'</td><td>'+esc(fLage(r))+'</td></tr>';}).join('')+'</tbody></table></div>':'';cardLabels($('otank'));
  $('title').textContent='Roadbook'+(tourLabel()?' · '+tourLabel():'');
  ensureMapsSoon();
 }
@@ -1179,8 +1080,8 @@ $('covFile').addEventListener('change',async function(){var f=this.files&&this.f
  catch(e){$('covMsg').innerHTML='<span class="err">Bild konnte nicht übernommen werden: '+esc(e.message||e)+'</span>';}});
 
 /* ---------- Einstellungen ---------- */
-var FIELDS=['region','tankNetz','tankKm','date','time','speed','dwell','fahrer','pkw','lkw','bus'];
-FIELDS.forEach(function(k){var el=$(k);el.addEventListener('input',function(){S[k]=el.type==='number'&&el.value!==''?num(el.value):el.value;touch('konvoi');if(k==='pkw'||k==='lkw'||k==='bus'){drawFz();touch('fahrzeuge');}if(k==='region'||k==='date')drawCoverPrev();if(k==='region'){kSync();drawK();$('kmsg').textContent=regionOf()?'Ansprechpartner der Tour '+regionOf()+', Konvoileitung und Notruf eingetragen.':'Konvoileitung und Notruf eingetragen. Mit gewählter Region kommen die Ansprechpartner der Tour dazu.';}if(k==='tankKm')drawTankList();renderRoadbookSoon();});});
+var FIELDS=['region','date','time','speed','dwell','fahrer','pkw','lkw','bus'];
+FIELDS.forEach(function(k){var el=$(k);el.addEventListener('input',function(){S[k]=el.type==='number'&&el.value!==''?num(el.value):el.value;touch('konvoi');if(k==='pkw'||k==='lkw'||k==='bus'){drawFz();touch('fahrzeuge');}if(k==='region'||k==='date')drawCoverPrev();if(k==='region'){kSync();drawK();$('kmsg').textContent=regionOf()?'Ansprechpartner der Tour '+regionOf()+', Konvoileitung und Notruf eingetragen.':'Konvoileitung und Notruf eingetragen. Mit gewählter Region kommen die Ansprechpartner der Tour dazu.';}renderRoadbookSoon();});});
 var TF=[['tw','weight'],['th','height'],['tb','width'],['tl','length']];
 TF.forEach(function(m){var el=$(m[0]);el.addEventListener('input',function(){S.truck[m[1]]=el.value===''?'':num(el.value);touch('konvoi');});});
 function fillFields(force){var a=force?null:document.activeElement;FIELDS.forEach(function(k){if($(k)!==a)$(k).value=S[k]==null?'':S[k];});TF.forEach(function(m){if($(m[0])!==a)$(m[0]).value=S.truck[m[1]]==null?'':S.truck[m[1]];});$('tiles').value=TS[P.tiles]?P.tiles:'osm';}
@@ -1270,11 +1171,6 @@ async function buildPdf(opt){
  if(S.route&&S.route.profile==='car')hints.push('Route als Pkw-Route berechnet, Lkw-Beschränkungen nicht berücksichtigt.');
  if(hints.length){head('Hinweise');hints.forEach(function(h){para(h,9.5,false,(h===CARDTXT||h===MEDTXT)?blue:warn,2);});}
  if(fresh('ov')){head('Übersicht');await img('ov',330);}
- var PTr=tankRows(),PTs=tankSuggest(PTr),PTl=PTr.filter(function(r){return r.c===1||PTs.indexOf(r)>=0;});
- if(PTr.length){var legend=function(){need(16);var lx=MG;[[1,netzName()],[2,'Autohof / Lkw-Tankstelle'],[3,'Raststätte']].forEach(function(q){page.drawRectangle({x:lx,y:y-11,width:11,height:11,color:q[0]===1?P0.rgb(0.04,0.31,0.64):P0.rgb(0.36,0.4,0.44)});var L=q[0]===1?'T':q[0]===2?'A':'R';page.drawText(L,{x:lx+5.5-B.widthOfTextAtSize(L,8)/2,y:y-9,size:8,font:B,color:q[0]===1?P0.rgb(1,0.85,0.3):white});tx(q[1],lx+15,y-9,8,false,mute);lx+=F.widthOfTextAtSize(wa(q[1]),8)+34;});y-=18;};
-  if(fresh('ov')){y+=4;legend();}
-  if(PTl.length){head('Tanken unterwegs ('+netzName()+' bevorzugt)');para('Zum Tanken möglichst '+netzName()+'-Stationen an Raststätten und Autohöfen anfahren, dort ist der Diesel günstiger. Vorgeschlagene Tankstopps sind markiert.',9,false,mute,4);
-   table([{t:'km',w:55,bold:true},{t:'Tankstelle',w:200},{t:'Art',w:110},{t:'Lage',w:150}],PTl.map(function(r){var sgg=PTs.indexOf(r)>=0;return{color:sgg?P0.rgb(0.11,0.36,0.27):null,cells:[kmf(r.km),[{t:r.n,b:true},sgg?{t:'Vorschlag',c:'i'}:''],fKind(r),fLage(r)]};}));}}
  /* Teams und Fahrzeuge */
  var fr=fzRows();
  var groups=teamGroups();
@@ -1905,7 +1801,7 @@ $('btnLoad').addEventListener('click',function(){
  if(C.on&&C.role!=='planer'){$('bmsg').textContent='Nur die Planung kann Daten laden.';return;}
  try{var d=JSON.parse($('bak').value),rb=d&&d.roadbook?d.roadbook:d;if(!rb||typeof rb!=='object'||!rb.start)throw 0;
   var old=S.abgaben.map(function(a){return a.id;});mergeInto(rb);if(d.maps&&typeof d.maps==='object')M=Object.assign(M,d.maps);initAll();
-  touch('konvoi','strecke','route','fahrzeuge','bestand','unterkunft','titelbild','tankstellen');Object.keys(S.tank).forEach(function(k){touch('tank:'+k);});S.abgaben.forEach(function(a){touch('abgabe:'+a.id);});old.forEach(function(id){if(!S.abgaben.some(function(a){return a.id===id;}))touch('abgabe:'+id);});
+  touch('konvoi','strecke','route','fahrzeuge','bestand','unterkunft','titelbild');Object.keys(S.tank).forEach(function(k){touch('tank:'+k);});S.abgaben.forEach(function(a){touch('abgabe:'+a.id);});old.forEach(function(id){if(!S.abgaben.some(function(a){return a.id===id;}))touch('abgabe:'+id);});
   $('bmsg').textContent='Daten geladen.';}
  catch(e){$('bmsg').textContent='Das sind keine gültigen Roadbook-Daten.';}
 });
@@ -1927,7 +1823,7 @@ $('navlist').addEventListener('keydown',function(e){var items=[].slice.call($('n
 document.addEventListener('click',function(e){if(!$('navlist').hidden&&!e.target.closest('.nav'))navOpen(false);});
 window.addEventListener('hashchange',function(){if(/access_token|type=/.test(location.hash))return;setTab((location.hash||'').slice(1));});
 
-function initAll(){drawCoverPrev();drawTankList();drawUnterkunft();drawTank();fillFields();drawK();drawInfos();drawTeams();drawStations();renderRoadbook();drawBest();drawAbg();calcPk();drawLadeplan();applyRole();}
+function initAll(){drawCoverPrev();drawUnterkunft();drawTank();fillFields();drawK();drawInfos();drawTeams();drawStations();renderRoadbook();drawBest();drawAbg();calcPk();drawLadeplan();applyRole();}
 if(LOGO){$('logo').src=LOGO;$('logo').hidden=false;}
 initAll();setTab((location.hash||'').slice(1));
 cloudInit();
