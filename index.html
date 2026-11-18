@@ -202,7 +202,7 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <nav class="nav" aria-label="Bereiche">
 <button type="button" class="navbtn" id="navbtn" aria-haspopup="true" aria-expanded="false" aria-controls="navlist"><span class="navico" aria-hidden="true"><i></i><i></i><i></i></span><span id="navcur">Planung</span><span class="navcaret" aria-hidden="true">▾</span></button>
 <div class="tabs" id="navlist" role="menu" hidden>
-<button class="tab" role="menuitem" id="tab-planung" data-tab="planung" aria-selected="true"><b>Planung</b><small>Strecke, Stopps, Teams, Fahrzeuge</small></button>
+<button class="tab" role="menuitem" id="tab-planung" data-tab="planung" aria-selected="true"><b>Planung</b><small>Strecke, Stopps, Fahrzeuge</small></button>
 <button class="tab" role="menuitem" id="tab-roadbook" data-tab="roadbook" aria-selected="false"><b>Roadbook</b><small>Zeitplan, Karten, PDF</small></button>
 <button class="tab" role="menuitem" id="tab-paeckchen" data-tab="paeckchen" aria-selected="false"><b>Päckchen zählen</b><small>Ladeliste, Ladeplan, Abgaben</small></button>
 <button class="tab" role="menuitem" id="tab-abrechnung" data-tab="abrechnung" aria-selected="false"><b>Abrechnung</b><small>Auslagenerstattung und Tankprotokoll</small></button>
@@ -236,17 +236,13 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <div class="panel"><h2>Teamleitung und Ansprechpartner</h2><div id="kedit"></div>
 <div class="row"><button type="button" id="addk">Ansprechpartner hinzufügen</button></div></div>
 
-<div class="panel"><h2>Teams</h2>
-<p class="small" style="margin-top:-4px">Ein Team ist eine Fahrzeuggruppe mit eigenem Ziel. Trennt es sich unterwegs vom Konvoi, wählst du die Station der Konvoiteilung.</p>
-<div id="tedit"></div>
-<div class="row"><button type="button" id="addteam">Team hinzufügen</button></div></div>
 
 <div class="panel"><h2>Fahrzeuge und Besatzung</h2>
 <div id="fzedit"></div>
 <p class="small">Die Zahl der Zeilen folgt der Anzahl Pkw, Lkw und Reisebusse oben.</p></div>
 
 <div class="panel"><h2>Übernachtungen und Zimmer</h2>
-<p class="small" style="margin-top:-4px">Für jede Unterkunft Adresse, Zeitraum und die Teams, die dort schlafen. Darunter die Zimmereinteilung: reserviert sind in der Regel Doppelzimmer, ein Einzelzimmer ist gegen Aufpreis und je nach Verfügbarkeit möglich. Namen werden aus der Besatzung der Fahrzeuge vorgeschlagen.</p>
+<p class="small" style="margin-top:-4px">Für jede Unterkunft Adresse und Zeitraum. Darunter die Zimmereinteilung: reserviert sind in der Regel Doppelzimmer, ein Einzelzimmer ist gegen Aufpreis und je nach Verfügbarkeit möglich. Namen werden aus der Besatzung der Fahrzeuge vorgeschlagen.</p>
 <div id="uedit"></div>
 <div class="row"><button type="button" id="addunterkunft">Unterkunft hinzufügen</button></div></div>
 
@@ -378,9 +374,9 @@ function num(v){var n=parseFloat(v);return isNaN(n)?0:n;}
 function sumObj(o){var n=0;for(var k in o)n+=num(o[k]);return n;}
 function clone(o){return o==null?o:JSON.parse(JSON.stringify(o));}
 function normalize(){
- if(!S.vias)S.vias=[];if(!S.abgaben)S.abgaben=[];if(!S.bestand)S.bestand={};if(!S.teams)S.teams=[];if(!S.teamRoutes)S.teamRoutes={};
+ if(!S.vias)S.vias=[];if(!S.abgaben)S.abgaben=[];if(!S.bestand)S.bestand={};S.teams=[];S.teamRoutes={};
  if(!S.kontakte||!S.kontakte.length)S.kontakte=[{rolle:'',name:'',tel:''}];
- if(!S.infos)S.infos=[];if(!S.paletten||typeof S.paletten!=='object')S.paletten={};if(!S.tank||typeof S.tank!=='object')S.tank={};if(!Array.isArray(S.unterkuenfte))S.unterkuenfte=[];S.unterkuenfte.forEach(function(u){if(!u.zimmer)u.zimmer=[];if(!u.teams)u.teams=[];});if(!S.fz)S.fz={pkw:[],lkw:[],bus:[]};if(!S.legKm)S.legKm=[0];
+ if(!S.infos)S.infos=[];if(!S.paletten||typeof S.paletten!=='object')S.paletten={};if(!S.tank||typeof S.tank!=='object')S.tank={};if(!Array.isArray(S.unterkuenfte))S.unterkuenfte=[];S.unterkuenfte.forEach(function(u){u.teams=[];if(!u.zimmer)u.zimmer=[];if(!u.teams)u.teams=[];});if(!S.fz)S.fz={pkw:[],lkw:[],bus:[]};if(!S.legKm)S.legKm=[0];
  S.vias.forEach(function(v){if(!v.type)v.type=v.wechsel?'pause':'halt';if(v.id==null)v.id=rid();v.id=String(v.id);});
  S.abgaben.forEach(function(a){a.id=String(a.id);if(!a.pk)a.pk={};});
  S.infos.forEach(function(x){if(!x.id)x.id=rid();});
@@ -443,7 +439,7 @@ async function flush(){
   saveCache();C.errShown=false;C.lastSave=new Date();setSync('ok',syncLabel()+' · gespeichert '+tfmt.format(C.lastSave));
  }finally{flushing=false;}
 }
-function secName(sec){return {konvoi:'Konvoi und Infos',strecke:'Strecke',route:'Route',fahrzeuge:'Fahrzeuge und Teams',bestand:'Ladeliste',unterkunft:'Übernachtungen',titelbild:'Titelbild',tankstellen:'Tankstellen'}[sec]||(/^tank:/.test(sec)?'Tankprotokoll':'Abgabe');}
+function secName(sec){return {konvoi:'Konvoi und Infos',strecke:'Strecke',route:'Route',fahrzeuge:'Fahrzeuge',bestand:'Ladeliste',unterkunft:'Übernachtungen',titelbild:'Titelbild',tankstellen:'Tankstellen'}[sec]||(/^tank:/.test(sec)?'Tankprotokoll':'Abgabe');}
 function toast(t){var n=document.createElement('div');n.className='note';n.setAttribute('role','status');n.textContent=t;$('toasts').appendChild(n);setTimeout(function(){n.remove();},10000);}
 async function reloadSection(sec){forceFill=true;
  var r=await C.client.from('daten').select('bereich,inhalt,version').eq('konvoi_id',C.konvoi.id).eq('bereich',sec);
@@ -1004,42 +1000,16 @@ $('btnTank').addEventListener('click',function(){tankSearch(false);});
 $('tankOnlyTp').addEventListener('change',drawTankList);
 $('tanklist').addEventListener('click',function(e){var id=e.target.dataset.tkadd;if(id){if(C.on&&C.role!=='planer')return;tankAdd(id);}});
 
-/* ---------- Teams ---------- */
-function teamById(id){return S.teams.find(function(t){return t.id===id;});}
-function drawTeams(){
- var st=stationList(),opts=st.filter(function(s){return s.k==='via';});
- $('tedit').innerHTML=S.teams.length?S.teams.map(function(t){var id='t-'+t.id,z=t.ziel||{};
-  return '<div class="team" data-team="'+t.id+'" style="border-left-color:'+esc(t.farbe)+'"><div class="ex" style="margin-top:0"><div><label for="'+id+'-n">Teamname</label><input id="'+id+'-n" data-f="name" value="'+esc(t.name)+'" placeholder="z. B. Team Sofia"></div>'
-  +'<div><label for="'+id+'-c">Farbe</label><input type="color" id="'+id+'-c" data-f="farbe" value="'+esc(t.farbe)+'"></div>'
-  +'<div><label for="'+id+'-ab">Konvoiteilung an</label><select id="'+id+'-ab" data-f="ab"><option value="">bleibt bis zum Ziel</option>'+opts.map(function(s){return '<option value="'+s.key+'"'+(t.ab===s.key?' selected':'')+'>'+(st.indexOf(s)+1)+' · '+esc(stName(s))+'</option>';}).join('')+'</select></div></div>'
-  +(t.ab?'<div style="margin-top:8px"><label for="'+id+'-z">Eigenes Ziel nach der Teilung</label><div class="line"><input id="'+id+'-z" data-f="ziel" value="'+esc(z.name||'')+'" placeholder="z. B. Warna"><button type="button" data-act="tsearch">Suchen</button></div><div class="res"></div><span class="small">'+(z.lat!=null?'<span class="ok">Ziel gesetzt</span> · '+z.lat.toFixed(4)+', '+z.lon.toFixed(4)+(S.teamRoutes[t.id]?' · '+kmf(S.teamRoutes[t.id].km)+' ab Teilung':' · Route berechnen'):'Ziel suchen oder Koordinaten eingeben')+'</span></div>':'')
-  +'<div style="margin-top:8px"><label for="'+id+'-h">Abschluss, Unterkunft oder Hinweise für dieses Team</label><input id="'+id+'-h" data-f="hinweis" value="'+esc(t.hinweis||'')+'" placeholder="z. B. Abschlussabend in Sofia, BG Hotel"></div>'
-  +'<div class="row"><button type="button" class="mini" data-act="tdel">Team entfernen</button></div></div>';}).join(''):'<p class="mute">Noch keine Teams. Ohne Teams fährt der ganze Konvoi gemeinsam zum Ziel.</p>';
- drawFz();
-}
-function teamOf(t){var w=t.closest('[data-team]');return w?teamById(w.dataset.team):null;}
-$('tedit').addEventListener('input',function(e){var t=e.target,tm=teamOf(t),f=t.dataset.f;if(!tm||!f||f==='ab')return;
- if(f==='ziel'){tm.ziel=Object.assign({},tm.ziel||{},{name:t.value});touch('fahrzeuge');return;}
- tm[f]=t.value;if(f==='farbe'){t.closest('.team').style.borderLeftColor=t.value;ensureMapsSoon();}if(f==='name')drawFz();touch('fahrzeuge');renderRoadbookSoon();});
-$('tedit').addEventListener('change',function(e){var t=e.target,tm=teamOf(t);if(!tm||t.dataset.f!=='ab')return;tm.ab=t.value;delete S.teamRoutes[tm.id];touch('fahrzeuge','route');keepFocus(drawTeams);renderRoadbook();scheduleRoute();});
-$('tedit').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.dataset.f==='ziel'){e.preventDefault();teamSearch(teamOf(e.target),e.target.closest('.team'));}});
-$('tedit').addEventListener('click',function(e){var t=e.target,tm=teamOf(t);if(!tm)return;
- if(t.dataset.act==='tdel'){S.teams=S.teams.filter(function(x){return x!==tm;});delete S.teamRoutes[tm.id];FZ.forEach(function(f){(S.fz[f[0]]||[]).forEach(function(o){if(o&&o.team===tm.id)o.team='';});});touch('fahrzeuge','route');drawTeams();renderRoadbook();return;}
- if(t.dataset.act==='tsearch'){teamSearch(tm,t.closest('.team'));return;}
- var hb=t.closest('[data-hit]');if(hb){var d=hb.closest('.res')._hits[+hb.dataset.hit];tm.ziel={name:d.name,lat:d.lat,lon:d.lon};delete S.teamRoutes[tm.id];touch('fahrzeuge','route');drawTeams();renderRoadbook();scheduleRoute();}
-});
-async function teamSearch(tm,el){if(!tm)return;var q=(tm.ziel&&tm.ziel.name||'').trim(),box=el.querySelector('.res');if(!q)return;
- var cc=parseCoord(q);if(cc){tm.ziel={name:'Punkt '+cc[0].toFixed(4)+', '+cc[1].toFixed(4),lat:cc[0],lon:cc[1]};delete S.teamRoutes[tm.id];touch('fahrzeuge','route');drawTeams();renderRoadbook();scheduleRoute();return;}
- box.textContent='Suche …';try{var r=await placeSearch(q,null);if(!r.length){box.textContent='Kein Treffer.';return;}box._hits=r;box.innerHTML=hitsHtml(r,null);}catch(e){box.innerHTML='<span class="err small">'+esc(netMsg(e))+'</span>';}}
-$('addteam').addEventListener('click',function(){S.teams.push({id:rid(),name:'',farbe:TCOL[S.teams.length%TCOL.length],ab:'',ziel:{name:'',lat:null,lon:null},hinweis:''});touch('fahrzeuge');drawTeams();renderRoadbook();});
+/* Teams wurden entfernt; leere Funktionen halten bestehende Aufrufe gültig */
+function teamById(){return null;}
+function drawTeams(){}
 
 /* ---------- Fahrzeuge, Kontakte, Infos ---------- */
 function fzRows(){var out=[];FZ.forEach(function(t){var n=Math.max(0,Math.min(60,Math.floor(num(S[t[0]]))));if(!S.fz[t[0]])S.fz[t[0]]=[];for(var i=0;i<n;i++){if(!S.fz[t[0]][i])S.fz[t[0]][i]={ruf:'',kz:'',team:'',leiter:'',crew:''};out.push({t:t[0],lab:t[1]+' '+(i+1),i:i,o:S.fz[t[0]][i]});}});return out;}
 function drawFz(){
  var r=fzRows();
- $('fzedit').innerHTML=r.length?'<div class="scroll"><table class="ftab cards"><thead><tr><th>Fahrzeug</th><th>Rufname</th><th>Kennzeichen</th><th>Team</th><th>Tourleitung / Fahrer</th><th>Besatzung</th></tr></thead><tbody>'+r.map(function(x){var b=x.t+'-'+x.i,cur=x.o.team||'';
-  var to='<option value=""'+(cur===''?' selected':'')+'>ohne Team</option>'+S.teams.map(function(t){return '<option value="'+t.id+'"'+(cur===t.id?' selected':'')+'>'+esc(t.name||'Team ohne Namen')+'</option>';}).join('');
-  return '<tr data-t="'+x.t+'" data-i="'+x.i+'"><td class="head">'+esc(x.lab)+'</td><td><input id="fr-'+b+'" data-f="ruf" value="'+esc(x.o.ruf)+'" placeholder="BUL 1" aria-label="Rufname '+esc(x.lab)+'" style="width:90px"></td><td><input class="kz" id="kz-'+b+'" data-f="kz" value="'+esc(x.o.kz)+'" placeholder="HU-AB 123" aria-label="Kennzeichen '+esc(x.lab)+'"></td><td><select id="ft-'+b+'" data-f="team" aria-label="Team '+esc(x.lab)+'">'+to+'</select></td><td><input id="fl-'+b+'" data-f="leiter" value="'+esc(x.o.leiter)+'" aria-label="Tourleitung '+esc(x.lab)+'"></td><td><input id="fc-'+b+'" data-f="crew" value="'+esc(x.o.crew)+'" placeholder="Namen, mit Komma getrennt" aria-label="Besatzung '+esc(x.lab)+'"></td></tr>';}).join('')+'</tbody></table></div>':'<p class="mute">Oben die Anzahl Pkw, Lkw und Reisebusse eintragen.</p>';;cardLabels($('fzedit'));
+ $('fzedit').innerHTML=r.length?'<div class="scroll"><table class="ftab cards"><thead><tr><th>Fahrzeug</th><th>Rufname</th><th>Kennzeichen</th><th>Tourleitung / Fahrer</th><th>Besatzung</th></tr></thead><tbody>'+r.map(function(x){var b=x.t+'-'+x.i,cur=x.o.team||'';
+  return '<tr data-t="'+x.t+'" data-i="'+x.i+'"><td class="head">'+esc(x.lab)+'</td><td><input id="fr-'+b+'" data-f="ruf" value="'+esc(x.o.ruf)+'" placeholder="BUL 1" aria-label="Rufname '+esc(x.lab)+'" style="width:90px"></td><td><input class="kz" id="kz-'+b+'" data-f="kz" value="'+esc(x.o.kz)+'" placeholder="HU-AB 123" aria-label="Kennzeichen '+esc(x.lab)+'"></td><td><input id="fl-'+b+'" data-f="leiter" value="'+esc(x.o.leiter)+'" aria-label="Tourleitung '+esc(x.lab)+'"></td><td><input id="fc-'+b+'" data-f="crew" value="'+esc(x.o.crew)+'" placeholder="Namen, mit Komma getrennt" aria-label="Besatzung '+esc(x.lab)+'"></td></tr>';}).join('')+'</tbody></table></div>':'<p class="mute">Oben die Anzahl Pkw, Lkw und Reisebusse eintragen.</p>';;cardLabels($('fzedit'));
 }
 function fzSet(t){var tr=t.closest('tr');if(!tr||!t.dataset.f)return;var o=S.fz[tr.dataset.t][+tr.dataset.i];o[t.dataset.f]=t.dataset.f==='kz'?t.value.toUpperCase():t.value;touch('fahrzeuge');renderRoadbookSoon();}
 $('fzedit').addEventListener('input',function(e){if(e.target.tagName!=='SELECT')fzSet(e.target);});
@@ -1061,10 +1031,10 @@ $('addinfotpl').addEventListener('click',function(){INFOS.forEach(function(x){S.
 
 /* ---------- Roadbook anzeigen ---------- */
 var rbT=null;function renderRoadbookSoon(){clearTimeout(rbT);rbT=setTimeout(renderRoadbook,200);}
-function filledFz(x){var o=x.o;return !!(o.ruf||o.kz||o.leiter||o.crew||o.team);}
+function filledFz(x){var o=x.o;return !!(o.ruf||o.kz||o.leiter||o.crew);}
 function teamFz(id){return fzRows().filter(function(x){return (x.o.team||'')===id&&filledFz(x);});}
 function namedTeams(){return S.teams.filter(function(t){return (t.name||'').trim();});}
-function teamGroups(){return namedTeams().map(function(t){return{t:t,rows:teamFz(t.id)};}).concat([{t:null,rows:teamFz('')}]).filter(function(g){return g.t||g.rows.length;});}
+function teamGroups(){var rows=fzRows().filter(filledFz);return rows.length?[{t:null,rows:rows}]:[];}
 function renderRoadbook(){
  var R=sched(),notes='',st=R.rows;
  if(!S.date)notes+='<div class="info">Noch kein Abfahrtsdatum eingetragen. Die Zeiten gelten vorläufig ab heute'+(S.time?'':', 06:00 Uhr')+'.</div>';
@@ -1080,8 +1050,8 @@ function renderRoadbook(){
  var ks=S.kontakte.filter(function(k){return k.name||k.tel;});
  $('okontakt').innerHTML=ks.length?'<h3>Teamleitung und Ansprechpartner</h3><div class="kontakt">'+ks.map(function(k){return '<div><span class="tag">'+esc(k.rolle||'Ansprechpartner')+'</span><b>'+esc(k.name)+'</b><span class="tel">'+esc(k.tel)+'</span></div>';}).join('')+'</div>':'';
  var groups=teamGroups();
- $('oteams').innerHTML=groups.length?'<h3>Teams und Fahrzeuge</h3>'+groups.map(function(g){var t=g.t;
-  return '<div class="team" style="border-left-color:'+esc(t?t.farbe:'var(--line)')+'"><b>'+esc(t?(t.name||'Team ohne Namen'):(namedTeams().length?'Ohne Team':'Fahrzeuge'))+'</b>'+(t?'<span class="small">'+(t.ab?'Konvoiteilung an Station '+(stationList().findIndex(function(s){return s.key===t.ab;})+1)+', weiter nach '+esc(t.ziel&&t.ziel.name||'(Ziel offen)'):'bis '+esc(S.ziel.name||'Ziel'))+(t.hinweis?' · '+esc(t.hinweis):'')+'</span>':'')
+ $('oteams').innerHTML=groups.length?'<h3>Fahrzeuge</h3>'+groups.map(function(g){var t=g.t;
+  return '<div>'+(t?'<span class="small">'+(t.ab?'Konvoiteilung an Station '+(stationList().findIndex(function(s){return s.key===t.ab;})+1)+', weiter nach '+esc(t.ziel&&t.ziel.name||'(Ziel offen)'):'bis '+esc(S.ziel.name||'Ziel'))+(t.hinweis?' · '+esc(t.hinweis):'')+'</span>':'')
    +(g.rows.length?'<div class="scroll"><table style="margin-top:6px"><thead><tr><th>Rufname</th><th>Kennzeichen</th><th>Tourleitung</th><th>Besatzung</th></tr></thead><tbody>'+g.rows.map(function(x){return '<tr><td>'+esc(x.o.ruf||x.lab)+'</td><td><b>'+esc(x.o.kz||'–')+'</b></td><td>'+esc(x.o.leiter)+'</td><td>'+esc(x.o.crew)+'</td></tr>';}).join('')+'</tbody></table></div>':'<span class="small">Noch keine Fahrzeuge zugeordnet.</span>')+'</div>';}).join(''):'';
  $('oov').innerHTML=(stationList().filter(function(s){return s.o.lat!=null;}).length>1)?'<h3>Übersicht</h3>'+mapBox('ov',false,'Übersichtskarte der Route'):'';
  var h='';
@@ -1103,7 +1073,7 @@ function renderRoadbook(){
   return '<div class="team" style="border-left-color:'+esc(t.farbe)+'"><div class="two"><div><b>'+esc(t.name||'Team')+'</b><div class="times"><span>Ab</span><b>'+esc(stName(b.row.s))+', '+stamp(b.row.dep)+'</b><span>Nach</span><b>'+esc(t.ziel&&t.ziel.name||'(Ziel offen)')+'</b><span>Strecke</span><b>'+(b.km?kmf(b.km)+' · '+hm(b.min):'noch nicht berechnet')+'</b>'+(b.km?'<span>Ankunft</span><b>'+stamp(b.arr)+'</b>':'')+'</div>'
    +(t.hinweis?'<p style="margin:6px 0 0">'+esc(t.hinweis)+'</p>':'')+'</div><div>'+(S.teamRoutes[t.id]?mapBox('tm'+t.id,false,'Karte Weiterfahrt '+(t.name||'')):'')+'</div></div></div>';}).join(''):'';
  $('ounter').innerHTML=S.unterkuenfte.length?'<h3>Übernachtungen</h3>'+S.unterkuenfte.map(function(u){var st=uStats(u),rooms=uRoomsSorted(u);
-  return '<div class="uout"><div class="two"><div><span class="tag">'+esc(u.art||'Unterkunft')+' · '+esc(uTeams(u))+'</span><span class="num">'+esc(u.name||'Unterkunft ohne Namen')+'</span><div class="times">'+(uZeitraum(u)?'<span>Zeitraum</span><b>'+esc(uZeitraum(u))+'</b>':'')+(u.addr?'<span>Adresse</span><b style="font-weight:500">'+esc(u.addr)+'</b>':'')+(u.tel?'<span>Telefon</span><b class="tel">'+esc(u.tel)+'</b>':'')
+  return '<div class="uout"><div class="two"><div><span class="tag">'+esc(u.art||'Unterkunft')+'</span><span class="num">'+esc(u.name||'Unterkunft ohne Namen')+'</span><div class="times">'+(uZeitraum(u)?'<span>Zeitraum</span><b>'+esc(uZeitraum(u))+'</b>':'')+(u.addr?'<span>Adresse</span><b style="font-weight:500">'+esc(u.addr)+'</b>':'')+(u.tel?'<span>Telefon</span><b class="tel">'+esc(u.tel)+'</b>':'')
    +(u.lat!=null?'<span>Koord.</span><b>'+u.lat.toFixed(5)+', '+u.lon.toFixed(5)+' · <a href="https://www.openstreetmap.org/?mlat='+u.lat+'&mlon='+u.lon+'#map=17/'+u.lat+'/'+u.lon+'" target="_blank" rel="noopener">OSM</a></b>':'')+'</div>'+(u.hinweis?'<p style="margin:6px 0 0">'+esc(u.hinweis)+'</p>':'')+'</div><div>'+(u.lat!=null?mapBox('u'+u.id,false,'Karte '+(u.name||'Unterkunft')):'')+'</div></div>'
    +(rooms.length?'<div class="scroll"><table style="margin-top:8px"><thead><tr><th>Zimmer</th><th>Art</th><th>Belegung</th><th>Bemerkung</th></tr></thead><tbody>'+rooms.map(function(z){return '<tr><td>'+esc(z.nr||'–')+'</td><td>'+(z.typ==='EZ'?'Einzelzimmer':'Doppelzimmer')+'</td><td><b>'+esc([z.p1,z.typ==='EZ'?'':z.p2].filter(Boolean).join(', ')||'–')+'</b></td><td>'+esc(z.bem||'')+'</td></tr>';}).join('')+'</tbody></table></div><p class="small">'+st.dz+' Doppelzimmer, '+st.ez+' Einzelzimmer, '+st.pers.length+' Personen</p>':'')+'</div>';}).join(''):'';
  var TRr=tankRows(),TRs=tankSuggest(TRr),TRl=TRr.filter(function(r){return r.c===1||TRs.indexOf(r)>=0;});
@@ -1273,10 +1243,9 @@ async function buildPdf(opt){
  /* Teams und Fahrzeuge */
  var fr=fzRows();
  var groups=teamGroups();
- if(groups.length){np();eyebrow('Teams und Fahrzeuge');
+ if(groups.length){np();eyebrow('Fahrzeuge');
   for(var gi=0;gi<groups.length;gi++){var g=groups[gi],t=g.t;
-   need(60);page.drawRectangle({x:MG,y:y-16,width:6,height:16,color:t?hexRgb(P0,t.farbe):lineC});
-   tx(t?(t.name||'Team ohne Namen'):(namedTeams().length?'Ohne Team':'Fahrzeuge'),MG+12,y-13,13,true);y-=22;
+   need(60);
    if(t)para(t.ab?'Konvoiteilung an '+stName(stationList().find(function(s){return s.key===t.ab;})||{o:{}})+', weiter nach '+(t.ziel&&t.ziel.name||'(Ziel offen)'):'Fährt bis '+(S.ziel.name||'Ziel'),9,false,mute,t.hinweis?0:4);
    if(t&&t.hinweis)para(t.hinweis,9,false,mute,4);
    if(g.rows.length)vehTable(g.rows);else y-=4;
@@ -1299,7 +1268,7 @@ async function buildPdf(opt){
   for(var ui=0;ui<S.unterkuenfte.length;ui++){var u=S.unterkuenfte[ui],rooms=uRoomsSorted(u),st=uStats(u),mapH=(CW/2-6)*360/640;
    need(60+(fresh('u'+u.id)?mapH:0));
    page.drawRectangle({x:MG,y:y-16,width:6,height:16,color:P0.rgb(0.42,0.11,0.6)});tx(u.name||'Unterkunft ohne Namen',MG+12,y-13,13,true);y-=22;
-   var top0=y,colW2=CW/2-6,lines=[[u.art||'Unterkunft','Für: '+uTeams(u)].join(' · '),uZeitraum(u),u.addr,u.tel?'Telefon: '+u.tel:'',u.lat!=null?u.lat.toFixed(6)+', '+u.lon.toFixed(6):'',u.hinweis].filter(Boolean);
+   var top0=y,colW2=CW/2-6,lines=[u.art||'Unterkunft',uZeitraum(u),u.addr,u.tel?'Telefon: '+u.tel:'',u.lat!=null?u.lat.toFixed(6)+', '+u.lon.toFixed(6):'',u.hinweis].filter(Boolean);
    lines.forEach(function(l,li){wrap(l,colW2,9.5,li===2?B:F).forEach(function(w){tx(w,MG,y-10,9.5,li===2,li===0?mute:ink);y-=13;});});
    if(fresh('u'+u.id)){var im=await emb('u'+u.id);page.drawImage(im,{x:MG+colW2+12,y:top0-mapH,width:colW2,height:mapH});y=Math.min(y,top0-mapH)-8;}else y-=4;
    if(rooms.length){table([{t:'Zimmer',w:60},{t:'Art',w:95},{t:'Belegung',w:230,bold:true},{t:'Bemerkung',w:130}],rooms.map(function(z){return{cells:[z.nr||'–',z.typ==='EZ'?'Einzelzimmer':'Doppelzimmer',[z.p1,z.typ==='EZ'?'':z.p2].filter(Boolean).join(', ')||'–',z.bem||'']};}));
@@ -1600,7 +1569,7 @@ $('tank').addEventListener('change',function(e){if(e.target.tagName==='SELECT')t
 var UART=['Hotel','Pension','Einrichtung','Gemeindehaus','Privat','Sonstiges'];
 function uById(id){return S.unterkuenfte.find(function(u){return u.id===id;});}
 function splitNames(t){return String(t||'').split(/[,;\/\n]+/).map(function(x){return x.trim();}).filter(Boolean);}
-function crewNames(teamIds){var out=[];fzRows().forEach(function(x){if(teamIds&&teamIds.length&&teamIds.indexOf(x.o.team||'')<0)return;splitNames(x.o.leiter).concat(splitNames(x.o.crew)).forEach(function(n){if(out.indexOf(n)<0)out.push(n);});});return out;}
+function crewNames(){var out=[];fzRows().forEach(function(x){splitNames(x.o.leiter).concat(splitNames(x.o.crew)).forEach(function(n){if(out.indexOf(n)<0)out.push(n);});});return out;}
 function nights(u){var a=Date.parse(u.von),b=Date.parse(u.bis);return isNaN(a)||isNaN(b)?0:Math.max(0,Math.round((b-a)/86400000));}
 function dde(d){var m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'.'+m[2]+'.'+m[1]:'';}
 function uZeitraum(u){var n=nights(u);return (u.von||u.bis)?(dde(u.von)||'?')+' bis '+(dde(u.bis)||'?')+(n?' · '+n+(n===1?' Nacht':' Nächte'):''):'';}
