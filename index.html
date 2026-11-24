@@ -1020,7 +1020,10 @@ $('beitrAdd').addEventListener('click',beitrAdd);
 $('beitrNeu').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();beitrAdd();}});
 
 /* ---------- Fahrzeuge, Kontakte, Infos ---------- */
-function fzRows(){var out=[];FZ.forEach(function(t){var n=Math.max(0,Math.min(60,Math.floor(num(S[t[0]]))));if(!S.fz[t[0]])S.fz[t[0]]=[];for(var i=0;i<n;i++){if(!S.fz[t[0]][i])S.fz[t[0]][i]={ruf:'',kz:'',team:'',leiter:'',crew:''};out.push({t:t[0],lab:t[1]+' '+(i+1),i:i,o:S.fz[t[0]][i]});}});return out;}
+/* Reihung im Konvoi: Pkw und Lkw im Wechsel, beginnend mit einem Pkw; Reisebusse am Ende */
+function fzRows(){var by={};FZ.forEach(function(t){var n=Math.max(0,Math.min(60,Math.floor(num(S[t[0]])))),L=by[t[0]]=[];if(!S.fz[t[0]])S.fz[t[0]]=[];for(var i=0;i<n;i++){if(!S.fz[t[0]][i])S.fz[t[0]][i]={ruf:'',kz:'',team:'',leiter:'',crew:''};L.push({t:t[0],lab:t[1]+' '+(i+1),i:i,o:S.fz[t[0]][i]});}});
+ var P=by.pkw||[],K=by.lkw||[],out=[];for(var j=0;j<Math.max(P.length,K.length);j++){if(P[j])out.push(P[j]);if(K[j])out.push(K[j]);}
+ Object.keys(by).forEach(function(k){if(k!=='pkw'&&k!=='lkw')out=out.concat(by[k]);});return out;}
 function drawFz(){
  var r=fzRows();
  $('fzedit').innerHTML=r.length?'<div class="scroll"><table class="ftab cards"><thead><tr><th>Fahrzeug</th><th>Rufname</th><th>Kennzeichen</th><th>Tourleitung / Fahrer</th><th>Besatzung</th></tr></thead><tbody>'+r.map(function(x){var b=x.t+'-'+x.i,cur=x.o.team||'';
