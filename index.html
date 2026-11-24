@@ -244,7 +244,7 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 <p class="small">Die Zahl der Zeilen folgt der Anzahl Pkw, Lkw und Reisebusse oben.</p><p id="ohnefz" class="small"></p></div>
 
 <div class="panel" id="beitrpanel"><h2>Mitfahrerbeiträge</h2>
-<p class="small" style="margin-top:-4px">Wer hat seinen Beitrag schon bezahlt? Die Liste zeigt die Mitfahrer der gewählten Region und Tour. Beim Abhaken wird das heutige Datum eingetragen. Die Angaben sehen nur angemeldete Konvoi-Mitglieder, sie erscheinen nicht im Roadbook.</p>
+<p class="small" style="margin-top:-4px">Hier trägst du die Mitfahrer deiner Tour selbst ein und hakst ab, wer bezahlt hat. Jede Person gehört zur oben gewählten Region und Tour, jedes Land führt so seine eigene Liste. Beim Abhaken wird das heutige Datum eingetragen. Mehrere Namen auf einmal mit Semikolon trennen.</p>
 <div class="g"><div><label for="beitragStd">Beitrag je Mitfahrer (Euro)</label><input id="beitragStd" type="number" min="0" step="1" placeholder="150"></div></div>
 <div class="row"><label style="display:inline-flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" id="beitrOffen"> nur offene Beiträge zeigen</label></div>
 <div class="sum" id="beitrsum"></div>
@@ -371,7 +371,7 @@ function kIsPreset(k){var n=(k.name||'').trim().toLowerCase();if(k.tel==='112'||
  if(KLEITUNG.some(function(x){return x[1].toLowerCase()===n;}))return true;return Object.keys(KTOUR).some(function(r){return KTOUR[r].some(function(x){return x[0].toLowerCase()===n;});});}
 function kSync(){var manual=S.kontakte.filter(function(k){return (k.rolle||k.name||k.tel)&&!kIsPreset(k);});S.kontakte=kPreset().concat(manual);}
 function rid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
-function D0(){return{beitragStd:'',beitr:{},beitrExtra:[],name:'',region:'',tour:'',ohneFz:[],mf:null,cover:'',date:'',time:'',speed:'',maxh:'',dwell:'',fahrer:'',pkw:'',lkw:'',bus:'',
+function D0(){return{beitragStd:'',beitr:{},beitrExtra:[],beitrList:[],name:'',region:'',tour:'',ohneFz:[],mf:null,cover:'',date:'',time:'',speed:'',maxh:'',dwell:'',fahrer:'',pkw:'',lkw:'',bus:'',
  truck:{weight:'',height:'',width:'',length:''},
  start:{name:'',lat:null,lon:null},vias:[],ziel:{name:'',lat:null,lon:null},
  legKm:[0],route:null,teamRoutes:{},fz:{pkw:[],lkw:[],bus:[]},teams:[],kontakte:[{rolle:'',name:'',tel:''}],
@@ -390,7 +390,7 @@ function regionOf(){return REGIONS[S.region]?S.region:'';}
 function tourLabel(){var r=regionOf(),y=String(S.date||'').slice(0,4);return r?r+(S.tour&&S.tour!=='*'?' – '+S.tour:'')+(y?' '+y:''):(S.name||'');}
 function regionSub(){var r=regionOf();return r?r+(S.tour&&S.tour!=='*'?' – '+S.tour:''):(S.name||'');}
 function dwellDef(){return S.dwell===''||S.dwell==null?DEF.dwell:num(S.dwell);}
-var SECT={konvoi:['name','region','tour','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus','truck','kontakte','infos'],strecke:['start','vias','ziel','legKm'],route:['route','teamRoutes'],fahrzeuge:['ohneFz','fz','teams'],bestand:['bestand','paletten'],unterkunft:['unterkuenfte'],titelbild:['cover'],mitfahrer:['mf'],beitraege:['beitragStd','beitr','beitrExtra']};
+var SECT={konvoi:['name','region','tour','date','time','speed','maxh','dwell','fahrer','pkw','lkw','bus','truck','kontakte','infos'],strecke:['start','vias','ziel','legKm'],route:['route','teamRoutes'],fahrzeuge:['ohneFz','fz','teams'],bestand:['bestand','paletten'],unterkunft:['unterkuenfte'],titelbild:['cover'],mitfahrer:['mf'],beitraege:['beitragStd','beitr','beitrExtra','beitrList']};
 var S,M={},P={tiles:'osm'},netBlocked=false,mapsFailed=false,busy=false;
 function $(i){return document.getElementById(i);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -405,7 +405,7 @@ function normalize(){
  S.abgaben.forEach(function(a){a.id=String(a.id);if(!a.pk)a.pk={};});
  S.infos.forEach(function(x){if(!x.id)x.id=rid();});
  FZ.forEach(function(t){(S.fz[t[0]]=S.fz[t[0]]||[]).forEach(function(o){if(o&&o.note&&!o.crew){o.crew=o.note;delete o.note;}});});
- if(S.region==null){S.region='';var nn=String(S.name||'').toLowerCase();Object.keys(REGIONS).forEach(function(r){if(!S.region&&nn.indexOf(r.toLowerCase())===0)S.region=r;});}if(S.cover==null)S.cover='';if(S.tour==null)S.tour='';if(!Array.isArray(S.ohneFz))S.ohneFz=[];if(!S.beitr||typeof S.beitr!=='object')S.beitr={};if(!Array.isArray(S.beitrExtra))S.beitrExtra=[];if(S.beitragStd==null)S.beitragStd='';
+ if(S.region==null){S.region='';var nn=String(S.name||'').toLowerCase();Object.keys(REGIONS).forEach(function(r){if(!S.region&&nn.indexOf(r.toLowerCase())===0)S.region=r;});}if(S.cover==null)S.cover='';if(S.tour==null)S.tour='';if(!Array.isArray(S.ohneFz))S.ohneFz=[];if(!S.beitr||typeof S.beitr!=='object')S.beitr={};if(!Array.isArray(S.beitrExtra))S.beitrExtra=[];if(!Array.isArray(S.beitrList)){S.beitrList=S.beitrExtra.map(function(x){var o=S.beitr[bKey(x.n)]||{};return{id:rid(),n:x.n,s:x.s||'',b:o.b!=null?o.b:'',paid:!!o.paid,d:o.d||'',note:o.note||''};});}if(S.beitragStd==null)S.beitragStd='';
  if(!S.start)S.start={name:'',lat:null,lon:null};if(!S.ziel)S.ziel={name:'',lat:null,lon:null};
 }
 function mergeInto(d){if(!d||typeof d!=='object')return;for(var k in d){if(k==='truck')S.truck=Object.assign({},S.truck,d.truck);else if(k==='fz')S.fz=Object.assign({pkw:[],lkw:[],bus:[]},d.fz);else if(k!=='plan'&&k!=='planSig'&&k!=='tiles')S[k]=d[k];}normalize();}
@@ -984,38 +984,42 @@ $('tour').addEventListener('change',function(){S.tour=this.value;setTimeout(draw
 /* ---------- Mitfahrerbeiträge ---------- */
 function bKey(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,' ');}
 function bScope(){var r=regionOf();return r?r+'|'+(S.tour&&S.tour!=='*'?S.tour:''):'';}
-function beitrPersons(){var r=regionOf(),t=S.tour,out=[],seen={};
- function add(n,f,extra){var k=bKey(n);if(!k||seen[k])return;seen[k]=1;out.push({n:n.trim(),f:f||'',x:!!extra});}
- if(S.mf&&r&&t){S.mf.p.forEach(function(x){if(x.l===r&&(t==='*'||x.t===t))add((x.v+' '+x.n).trim(),x.f);});}
- else crewNames().forEach(function(n){add(n,'');});
- var sc=bScope();(S.beitrExtra||[]).forEach(function(e){if(!sc||!e.s||e.s===sc||(t==='*'&&e.s.split('|')[0]===r))add(e.n,'nachgemeldet',true);});
- return out.sort(function(a,b){return a.n.localeCompare(b.n,'de');});}
+function bVis(e){var r=regionOf();if(!e.s)return true;var p=e.s.split('|');if(!r||p[0]!==r)return false;if(!S.tour||S.tour==='*'||!p[1])return true;return p[1]===S.tour;}
+function bList(){return (S.beitrList||[]).filter(bVis);}
+function beitrPersons(){return bList().map(function(e){return{n:e.n,f:'',e:e};});}
 function bStd(){var v=num(S.beitragStd);return v>0?v:150;}
 function bAmt(e){return e&&e.b!==''&&e.b!=null?num(e.b):bStd();}
 function eurTxt(v){return (Math.round(v*100)/100).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:2})+' €';}
-function beitrSum(P){var paid=0,sum=0,open=0;P.forEach(function(p){var e=S.beitr[bKey(p.n)];if(e&&e.paid){paid++;sum+=num(e.got!=null&&e.got!==''?e.got:bAmt(e));}else open+=bAmt(e);});return{paid:paid,sum:sum,open:open,n:P.length};}
+function beitrSum(L){var paid=0,sum=0,open=0;L.forEach(function(e){if(e.paid){paid++;sum+=bAmt(e);}else open+=bAmt(e);});return{paid:paid,sum:sum,open:open,n:L.length};}
+var bDelAsk='';
 function drawBeitr(keep){var host=$('beitrlist');if(!host)return;var bs=$('beitragStd');if(bs&&document.activeElement!==bs)bs.value=S.beitragStd||'';
+ var add=$('beitrAdd'),inp=$('beitrNeu');if(add)add.disabled=!regionOf();if(inp)inp.placeholder=regionOf()?'Vor- und Nachname, z. B. für '+(S.tour&&S.tour!=='*'?S.tour:regionOf()):'Erst oben eine Region wählen';
  if(keep&&host.contains(document.activeElement))return drawBeitrSum();
- var P=beitrPersons(),only=$('beitrOffen').checked,sh=P.filter(function(p){var e=S.beitr[bKey(p.n)];return !only||!(e&&e.paid);});
- if(!P.length){host.innerHTML='<p class="mute">'+(regionOf()?'Für diese Auswahl sind noch keine Mitfahrer bekannt. Tour wählen oder Person unten hinzufügen.':'Erst oben Region und Tour wählen.')+'</p>';drawBeitrSum();return;}
- host.innerHTML='<div class="scroll"><table class="cards"><thead><tr><th>Name</th><th>Betrag (€)</th><th>Bezahlt</th><th>Datum</th><th>Bemerkung</th><th></th></tr></thead><tbody>'+sh.map(function(p){var k=bKey(p.n),e=S.beitr[k]||{},id='b-'+k.replace(/[^a-z0-9äöüß]/g,'_');
-  return '<tr data-bk="'+esc(k)+'"'+(e.paid?' class="bpaid"':'')+'><td><b>'+esc(p.n)+'</b>'+(p.f?'<br><span class="small" style="display:inline">'+esc(p.f)+'</span>':'')+'</td>'
-  +'<td><input id="'+id+'-b" type="number" min="0" step="1" data-bf="b" value="'+esc(e.b!=null?e.b:'')+'" placeholder="'+bStd()+'" aria-label="Betrag '+esc(p.n)+'" style="max-width:110px"></td>'
-  +'<td><label style="display:inline-flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" data-bf="paid"'+(e.paid?' checked':'')+' aria-label="bezahlt '+esc(p.n)+'"> bezahlt</label></td>'
-  +'<td><input type="date" data-bf="d" value="'+esc(e.d||'')+'" aria-label="Datum '+esc(p.n)+'"></td>'
-  +'<td><input data-bf="note" value="'+esc(e.note||'')+'" placeholder="z. B. bar, Überweisung" aria-label="Bemerkung '+esc(p.n)+'"></td>'
-  +'<td>'+(p.x?'<button type="button" class="mini" data-bdelx="'+esc(k)+'">Entfernen</button>':'')+'</td></tr>';}).join('')+'</tbody></table></div>'
+ var L=bList(),only=$('beitrOffen').checked,sh=L.filter(function(e){return !only||!e.paid;});
+ if(!L.length){host.innerHTML='<p class="mute">'+(regionOf()?'Für '+esc(regionOf()+(S.tour&&S.tour!=='*'?' – '+S.tour:''))+' ist noch niemand eingetragen. Personen unten hinzufügen.':'Erst oben eine Region (und Tour) wählen, dann die Personen eintragen.')+'</p>';drawBeitrSum();return;}
+ host.innerHTML='<div class="scroll"><table class="cards"><thead><tr><th>Name</th><th>Betrag (€)</th><th>Bezahlt</th><th>Datum</th><th>Bemerkung</th><th></th></tr></thead><tbody>'+sh.map(function(e){var id='b-'+e.id,tp=e.s&&e.s.split('|')[1];
+  return '<tr data-bid="'+e.id+'"'+(e.paid?' class="bpaid"':'')+'><td><input id="'+id+'-n" data-bf="n" value="'+esc(e.n)+'" aria-label="Name">'+((S.tour==='*'||!S.tour)&&tp?'<span class="small" style="display:block">Tour '+esc(tp)+'</span>':'')+'</td>'
+  +'<td><input id="'+id+'-b" type="number" min="0" step="1" data-bf="b" value="'+esc(e.b!=null?e.b:'')+'" aria-label="Betrag '+esc(e.n)+'" style="max-width:110px"></td>'
+  +'<td><label style="display:inline-flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" data-bf="paid"'+(e.paid?' checked':'')+' aria-label="bezahlt '+esc(e.n)+'"> bezahlt</label></td>'
+  +'<td><input type="date" data-bf="d" value="'+esc(e.d||'')+'" aria-label="Datum '+esc(e.n)+'"></td>'
+  +'<td><input data-bf="note" value="'+esc(e.note||'')+'" placeholder="z. B. bar, Überweisung" aria-label="Bemerkung '+esc(e.n)+'"></td>'
+  +'<td><button type="button" class="mini" data-bdel2="'+e.id+'">'+(bDelAsk===e.id?'Wirklich löschen?':'Löschen')+'</button></td></tr>';}).join('')+'</tbody></table></div>'
   +(sh.length?'':'<p class="ok">Alle Beiträge dieser Auswahl sind bezahlt.</p>');
  cardLabels(host);drawBeitrSum();}
-function drawBeitrSum(){var s0=beitrSum(beitrPersons()),el=$('beitrsum');if(!el)return;el.innerHTML=s0.n?'<div><b>'+s0.paid+' von '+s0.n+'</b> bezahlt</div><div>erhalten <b>'+eurTxt(s0.sum)+'</b></div><div>offen <b>'+eurTxt(s0.open)+'</b></div>':'';}
-$('beitrlist').addEventListener('input',function(e){var t=e.target,tr=t.closest('[data-bk]');if(!tr||!t.dataset.bf)return;var k=tr.dataset.bk,o=S.beitr[k]||(S.beitr[k]={});
+function drawBeitrSum(){var s0=beitrSum(bList()),el=$('beitrsum');if(!el)return;el.innerHTML=s0.n?'<div><b>'+s0.paid+' von '+s0.n+'</b> bezahlt</div><div>erhalten <b>'+eurTxt(s0.sum)+'</b></div><div>offen <b>'+eurTxt(s0.open)+'</b></div>':'';}
+function bById(id){return (S.beitrList||[]).find(function(x){return x.id===id;});}
+$('beitrlist').addEventListener('input',function(e){var t=e.target,tr=t.closest('[data-bid]');if(!tr||!t.dataset.bf)return;var o=bById(tr.dataset.bid);if(!o)return;
  if(t.dataset.bf==='paid'){o.paid=t.checked;if(t.checked&&!o.d){o.d=new Date().toISOString().slice(0,10);var di=tr.querySelector('[data-bf=d]');if(di)di.value=o.d;}tr.classList.toggle('bpaid',t.checked);}
  else o[t.dataset.bf]=t.value;
  touch('beitraege');drawBeitrSum();if(t.dataset.bf==='paid'&&$('beitrOffen').checked)setTimeout(drawBeitr,600);});
-$('beitrlist').addEventListener('click',function(e){var k=e.target.dataset.bdelx;if(!k)return;S.beitrExtra=S.beitrExtra.filter(function(x){return bKey(x.n)!==k;});touch('beitraege');drawBeitr();});
+$('beitrlist').addEventListener('click',function(e){var id=e.target.dataset.bdel2;if(!id)return;
+ if(bDelAsk!==id){bDelAsk=id;drawBeitr();setTimeout(function(){if(bDelAsk===id){bDelAsk='';drawBeitr();}},4000);return;}
+ bDelAsk='';S.beitrList=S.beitrList.filter(function(x){return x.id!==id;});touch('beitraege');drawBeitr();});
 $('beitrOffen').addEventListener('change',function(){drawBeitr();});
-$('beitragStd').addEventListener('input',function(){S.beitragStd=this.value;touch('beitraege');drawBeitr();});
-function beitrAdd(){var n=$('beitrNeu').value.trim();if(!n)return;if(!S.beitrExtra.some(function(x){return bKey(x.n)===bKey(n);}))S.beitrExtra.push({n:n,s:bScope()});$('beitrNeu').value='';touch('beitraege');drawBeitr();}
+$('beitragStd').addEventListener('input',function(){S.beitragStd=this.value;touch('beitraege');drawBeitrSum();});
+function beitrAdd(){var inp=$('beitrNeu'),raw=inp.value.trim();if(!raw||!regionOf())return;
+ raw.split(/\s*[;\n]\s*/).filter(Boolean).forEach(function(n){S.beitrList.push({id:rid(),n:n,s:bScope(),b:String(bStd()),paid:false,d:'',note:''});});
+ inp.value='';touch('beitraege');drawBeitr();inp.focus();}
 $('beitrAdd').addEventListener('click',beitrAdd);
 $('beitrNeu').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();beitrAdd();}});
 
@@ -1734,7 +1738,7 @@ function drawBelege(){
 function abEur(r){var b=parseFloat(String(r.betrag).replace(',','.')),k=parseFloat(String(r.kurs).replace(',','.'));return isNaN(b)||isNaN(k)||!k?null:b/k;}
 function eurf(v){return v==null?'–':v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
 /* Mitfahrerbeiträge aus der Planung als Einnahme */
-function mfbPaid(){var P=beitrPersons(),out=[];P.forEach(function(p){var e=S.beitr[bKey(p.n)];if(e&&e.paid)out.push({n:p.n,f:p.f,b:bAmt(e),d:e.d||'',note:e.note||''});});return out;}
+function mfbPaid(){var out=[];bList().forEach(function(e){if(e.paid)out.push({n:e.n,f:(e.s||'').split('|')[1]||'',b:bAmt(e),d:e.d||'',note:e.note||''});});return out;}
 function mfbScope(){var r=regionOf();return r?r+(S.tour&&S.tour!=='*'?' – '+S.tour:S.tour==='*'?' (alle Touren)':''):'';}
 function mfbRow(){if(ab.mfb===false)return null;var L=mfbPaid();if(!L.length)return null;var sum=L.reduce(function(a,x){return a+x.b;},0),last=L.map(function(x){return x.d;}).filter(Boolean).sort().pop()||'';
  return{id:'_mfb',auto:true,datum:last,art:'Einnahme Mitfahrerbeiträge',bez:mfbScope(),beleg:'',betrag:String(-sum),cur:'EUR',kurs:'1',info:L.length+(L.length===1?' Person':' Personen')+', Liste siehe Anlage',list:L};}
@@ -1874,7 +1878,7 @@ async function abPdf(){
  if(BL.length||MR)tx('Anlagen: '+[MR?'Liste Mitfahrerbeiträge':'',BL.length?BL.length+(BL.length===1?' Beleg':' Belege'):''].filter(Boolean).join(', ')+' (folgende Seiten)',MG+8,sy+sh+6,8,false,mute);
  if(MR){var PW=595.28,PH=841.89,pp=doc.addPage([PW,PH]),yy=PH-MG-20,L=MR.list,cw=[200,120,70,70,0];cw[4]=PW-2*MG-cw[0]-cw[1]-cw[2]-cw[3];
   var head=function(){pp.drawText(wa('Anlage: Mitfahrerbeiträge'+(MR.bez?' · '+MR.bez:'')),{x:MG,y:yy,size:13,font:B,color:ink});yy-=16;pp.drawText(wa((ab.name?ab.name+' · ':'')+'WPK '+(ab.jahr||new Date().getFullYear())+' · bezahlte Beiträge laut Planung'),{x:MG,y:yy,size:9,font:F,color:mute});yy-=20;
-   var xx2=MG;['Name','Funktion','Betrag','bezahlt am','Bemerkung'].forEach(function(hd,i){pp.drawRectangle({x:xx2,y:yy-4,width:cw[i],height:16,color:yel});pp.drawText(wa(hd),{x:xx2+4,y:yy+1,size:8.5,font:B,color:ink});xx2+=cw[i];});yy-=18;};
+   var xx2=MG;['Name','Tour','Betrag','bezahlt am','Bemerkung'].forEach(function(hd,i){pp.drawRectangle({x:xx2,y:yy-4,width:cw[i],height:16,color:yel});pp.drawText(wa(hd),{x:xx2+4,y:yy+1,size:8.5,font:B,color:ink});xx2+=cw[i];});yy-=18;};
   head();
   L.forEach(function(x){if(yy<MG+40){pp=doc.addPage([PW,PH]);yy=PH-MG-20;head();}var xx2=MG,vals=[x.n,x.f,fmt(x.b,2)+' €',dd(x.d),x.note];
    vals.forEach(function(v,i){var t=wa(v||''),w=cw[i]-8;while(t&&F.widthOfTextAtSize(t,8.5)>w)t=t.slice(0,-1);pp.drawText(t,{x:i===2?xx2+cw[i]-4-F.widthOfTextAtSize(t,8.5):xx2+4,y:yy,size:8.5,font:F,color:ink});xx2+=cw[i];});
