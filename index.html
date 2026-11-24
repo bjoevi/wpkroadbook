@@ -238,7 +238,8 @@ textarea.mono{min-height:80px;font:12px/1.4 ui-monospace,Menlo,monospace}
 
 
 <div class="panel"><h2>Fahrzeuge und Besatzung</h2>
-<p class="small" style="margin-top:-4px">Mit der Wahl der Tour oben werden Fahrzeuge, Kennzeichen und Besatzung aus der WPK-Mitfahrerliste eingetragen. Die Verteilung der Personen auf die Fahrzeuge ist ein Vorschlag und lässt sich hier ändern.</p>
+<p class="small" style="margin-top:-4px">Mit der Wahl der Tour oben werden Anzahl und Kennzeichen der Fahrzeuge aus der WPK-Mitfahrerliste eingetragen. Tourleitung, Fahrer und Besatzung trägst du selbst ein.</p>
+<div class="row"><button type="button" class="mini" id="fzClear">Alle Namen in der Tabelle leeren</button></div>
 <p id="mfmsg" class="small" aria-live="polite"></p>
 <div id="fzedit"></div>
 <p class="small">Die Zahl der Zeilen folgt der Anzahl Pkw, Lkw und Reisebusse oben.</p><p id="ohnefz" class="small"></p></div>
@@ -961,25 +962,21 @@ function drawTourSel(){var el=$('tour');if(!el)return;var r=regionOf(),T=mfTours
  if(!r){el.innerHTML='<option value="">– erst Region wählen –</option>';el.disabled=true;return;}
  el.disabled=false;el.innerHTML='<option value="">– bitte wählen –</option>'+T.map(function(t){return '<option'+(S.tour===t?' selected':'')+'>'+esc(t)+'</option>';}).join('')+'<option value="*"'+(S.tour==='*'?' selected':'')+'>Alle Touren der Region</option>';
  el.value=S.tour||'';drawOhneFz();}
+var fzClrAsk=false;
 function drawOhneFz(){var e=$('ohnefz');if(e)e.innerHTML=(S.ohneFz||[]).length?'<b>Ohne Fahrzeugzuordnung:</b> '+esc(S.ohneFz.join(', ')):'';}
 var FZART={pkw:/^(pkw|transporter|kleinbus|van)/i,lkw:/^(zugmaschine|lkw|sattel)/i,bus:/^(bus|reisebus)/i};
+/* Tourwahl übernimmt nur Fahrzeuge und Kennzeichen; Personen trägt die Tour selbst ein */
 function applyTour(){var r=regionOf(),t=S.tour,M=S.mf;if(!r||!t||!M)return null;
  var inT=function(x){return x.l===r&&(t==='*'||x.t===t);},V={pkw:[],lkw:[],bus:[]};
- M.fz.filter(inT).forEach(function(f){var k=FZART.lkw.test(f.a)?'lkw':FZART.bus.test(f.a)?'bus':'pkw';V[k].push({ruf:'',kz:f.k||'',team:'',leiter:'',crew:''});});
- var P=M.p.filter(inT),nm=function(x){return (x.v+' '+x.n).trim();},by=function(re){return P.filter(function(x){return re.test(x.f||'');}).map(nm);};
- var drv=by(/lkw/i),bdrv=by(/bus/i),lead=by(/tour|team/i),rest=P.filter(function(x){return !/lkw|bus|tour|team/i.test(x.f||'');}).map(nm),left=[];
- function deal(list,veh){if(!veh.length){left=left.concat(list);return;}list.forEach(function(n,i){var o=veh[i%veh.length];if(!o.leiter)o.leiter=n;else o.crew=o.crew?o.crew+', '+n:n;});}
- deal(drv,V.lkw);deal(bdrv,V.bus);
- function seats(o,cap){return cap-(o.leiter?1:0)-(o.crew?o.crew.split(',').length:0);}
- lead.forEach(function(n,i){var o=V.pkw.length?V.pkw[i%V.pkw.length]:null;if(o&&!o.leiter){o.leiter=n;return;}rest.unshift(n);});
- function most(list,cap){var b=null,bf=0;list.forEach(function(o){var f=seats(o,cap);if(f>bf){bf=f;b=o;}});return b;}
- rest.forEach(function(n){var spot=most(V.pkw,5)||most(V.lkw,3)||most(V.bus,50);
-  if(!spot){left.push(n);return;}if(!spot.leiter)spot.leiter=n;else spot.crew=spot.crew?spot.crew+', '+n:n;});
- S.pkw=V.pkw.length||'';S.lkw=V.lkw.length||'';S.bus=V.bus.length||'';S.fz=V;S.ohneFz=left;
- return{v:V.pkw.length+V.lkw.length+V.bus.length,p:P.length,left:left.length};}
+ M.fz.filter(inT).forEach(function(f){var k=FZART.lkw.test(f.a)?'lkw':FZART.bus.test(f.a)?'bus':'pkw';V[k].push(f.k||'');});
+ var n=V.pkw.length+V.lkw.length+V.bus.length;if(!n)return{v:0};
+ ['pkw','lkw','bus'].forEach(function(k){if(!S.fz[k])S.fz[k]=[];V[k].forEach(function(kz,i){var o=S.fz[k][i]||(S.fz[k][i]={ruf:'',kz:'',team:'',leiter:'',crew:''});o.kz=kz;});S[k]=V[k].length||'';});
+ return{v:n};}
+$('fzClear').addEventListener('click',function(){var b=this;if(!fzClrAsk){fzClrAsk=true;b.textContent='Wirklich alle Namen leeren?';setTimeout(function(){fzClrAsk=false;b.textContent='Alle Namen in der Tabelle leeren';},4000);return;}
+ fzClrAsk=false;b.textContent='Alle Namen in der Tabelle leeren';['pkw','lkw','bus'].forEach(function(k){(S.fz[k]||[]).forEach(function(o){if(o){o.leiter='';o.crew='';}});});S.ohneFz=[];touch('fahrzeuge');drawFz();drawOhneFz();drawUnterkunft();renderRoadbook();$('mfmsg').textContent='Tourleitung, Fahrer und Besatzung geleert. Fahrzeuge und Kennzeichen bleiben.';});
 $('tour').addEventListener('change',function(){S.tour=this.value;setTimeout(drawBeitr,0);var res=S.mf?applyTour():null;touch('konvoi','fahrzeuge');fillFields(true);drawFz();drawOhneFz();drawCoverPrev();drawUnterkunft();renderRoadbook();
- if(!res)$('mfmsg').textContent=S.tour?'Tour gewählt. Die Mitfahrerliste ist in diesem Konvoi nicht hinterlegt, Fahrzeuge und Besatzung bitte von Hand eintragen.':'';
- if(res)$('mfmsg').innerHTML='<span class="ok">'+(S.tour==='*'?'Alle Touren '+esc(regionOf()):'Tour '+esc(S.tour))+': '+res.v+' Fahrzeuge und '+res.p+' Personen eingetragen.</span>'+(res.left?' '+res.left+' Personen ohne Fahrzeug, siehe unter der Tabelle.':'');});
+ if(!res)$('mfmsg').textContent=S.tour?'Tour gewählt. Fahrzeuge und Besatzung bitte von Hand eintragen.':'';
+ if(res)$('mfmsg').innerHTML=res.v?'<span class="ok">'+(S.tour==='*'?'Alle Touren '+esc(regionOf()):'Tour '+esc(S.tour))+': '+res.v+' Fahrzeuge mit Kennzeichen eingetragen. Fahrer und Besatzung bitte selbst eintragen.</span>':'Für diese Tour sind in der Mitfahrerliste keine Fahrzeuge hinterlegt.'+(res.left?' '+res.left+' Personen ohne Fahrzeug, siehe unter der Tabelle.':'');});
 
 /* ---------- Mitfahrerbeiträge ---------- */
 function bKey(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,' ');}
