@@ -1611,10 +1611,12 @@ $('tank').addEventListener('change',function(e){if(e.target.tagName==='SELECT')t
 
 /* ---------- Übernachtungen ---------- */
 var UART=['Hotel','Pension','Einrichtung','Gemeindehaus','Privat','Sonstiges'];
-function uVis(u){var r=regionOf();if(!u.reg)return true;if(!r)return true;if(u.reg!==r)return false;if(!S.tour||S.tour==='*'||!u.tour)return true;return u.tour===S.tour;}
-function uForOpts(u){var r=u.reg||regionOf(),T=r?(TOURS[r]||[]):[];var o=!u.reg?'<option value="" selected>alle Regionen</option>':'';if(r)o+='<option value="*"'+(u.reg&&!u.tour?' selected':'')+'>'+esc(r)+' – alle Touren</option>'+T.map(function(t){return '<option value="'+esc(t)+'"'+(u.reg&&u.tour===t?' selected':'')+'>'+esc(r)+' – '+esc(t)+'</option>';}).join('');return o;}
+function uTours(u){if(!Array.isArray(u.tours))u.tours=u.tour?[u.tour]:[];return u.tours;}
+function uVis(u){var r=regionOf();if(!u.reg)return true;if(!r)return true;if(u.reg!==r)return false;var T=uTours(u);if(!S.tour||S.tour==='*'||!T.length)return true;return T.indexOf(S.tour)>=0;}
+function uForHtml(u,id){var r=u.reg||regionOf(),T=r?(TOURS[r]||[]):[],sel=u.reg?uTours(u):[];if(!r)return '<span class="small">Gilt für alle Regionen. Für eine Zuordnung oben eine Region wählen.</span>';
+ return '<div class="fnl">'+'<label><input type="checkbox" data-utour="*"'+(u.reg&&!sel.length?' checked':'')+'>alle Touren '+esc(r)+'</label>'+T.map(function(t){return '<label><input type="checkbox" data-utour="'+esc(t)+'"'+(sel.indexOf(t)>=0?' checked':'')+'>'+esc(t)+'</label>';}).join('')+'</div>'+(!u.reg?'<span class="small">Bisher für alle Regionen. Mit einem Haken wird sie '+esc(r)+' zugeordnet.</span>':'');}
 function uList(){return S.unterkuenfte.filter(uVis);}
-function uFor(u){return !u.reg?'alle Regionen':u.reg+(u.tour?' – '+u.tour:' (alle Touren)');}
+function uFor(u){var T=uTours(u);return !u.reg?'alle Regionen':u.reg+(T.length?' – '+T.join(', '):' (alle Touren)');}
 function uById(id){return S.unterkuenfte.find(function(u){return u.id===id;});}
 function splitNames(t){return String(t||'').split(/[,;\/\n]+/).map(function(x){return x.trim();}).filter(Boolean);}
 function crewNames(){var out=[];fzRows().forEach(function(x){splitNames(x.o.leiter).concat(splitNames(x.o.crew)).forEach(function(n){if(out.indexOf(n)<0)out.push(n);});});(S.ohneFz||[]).forEach(function(n){if(out.indexOf(n)<0)out.push(n);});return out;}
@@ -1622,8 +1624,12 @@ function nights(u){var a=Date.parse(u.von),b=Date.parse(u.bis);return isNaN(a)||
 function dde(d){var m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'.'+m[2]+'.'+m[1]:'';}
 function uZeitraum(u){var n=nights(u);return (u.von||u.bis)?(dde(u.von)||'?')+' bis '+(dde(u.bis)||'?')+(n?' · '+n+(n===1?' Nacht':' Nächte'):''):'';}
 function uTeams(u){if(!u.teams||!u.teams.length)return 'alle';return u.teams.map(function(id){var t=teamById(id);return t?(t.name||'Team ohne Namen'):null;}).filter(Boolean).join(', ')||'alle';}
+function uNamePool(){var out=crewNames();bList().forEach(function(e){var n=(e.n||'').trim();if(n&&out.indexOf(n)<0)out.push(n);});return out.sort(function(a,b){return a.localeCompare(b,'de');});}
+function uAssigned(u){var a=[];(u.zimmer||[]).forEach(function(z){[z.p1,z.typ==='EZ'?'':z.p2].forEach(function(n){n=(n||'').trim();if(n)a.push(n.toLowerCase());});});return a;}
+function uFreeNames(u){var a=uAssigned(u);return uNamePool().filter(function(n){return a.indexOf(n.toLowerCase())<0;});}
+function uFillList(u){var dl=document.getElementById('pl-'+u.id);if(dl)dl.innerHTML=uFreeNames(u).map(function(n){return '<option value="'+esc(n)+'">';}).join('');}
 function uStats(u){var dz=0,ez=0,pers=[],dup=[];(u.zimmer||[]).forEach(function(z){if(z.typ==='EZ')ez++;else dz++;[z.p1,z.typ==='EZ'?'':z.p2].forEach(function(n){n=(n||'').trim();if(!n)return;if(pers.indexOf(n)>=0){if(dup.indexOf(n)<0)dup.push(n);}else pers.push(n);});});
- var exp=crewNames(u.teams),open=exp.filter(function(n){return pers.indexOf(n)<0;});return{dz:dz,ez:ez,pers:pers,dup:dup,open:open};}
+var exp=uNamePool(),open=exp.filter(function(n){return pers.indexOf(n)<0;});return{dz:dz,ez:ez,pers:pers,dup:dup,open:open};}
 function uSumHtml(u){var st=uStats(u);return st.dz+' Doppelzimmer, '+st.ez+' Einzelzimmer'+(st.ez?' (Aufpreis)':'')+', '+st.pers.length+' Personen eingeteilt'+(st.dup.length?'<span class="wn">Doppelt eingeteilt: '+esc(st.dup.join(', '))+'</span>':'')+(st.open.length?'<span class="small">Noch ohne Zimmer: '+esc(st.open.join(', '))+'</span>':'');}
 function drawUnterkunft(){
  var host=$('uedit');if(!host)return;
@@ -1631,14 +1637,14 @@ function drawUnterkunft(){
  host.innerHTML=(UL.length?UL.map(function(u,ui){var id='u-'+u.id;
   var h='<div class="ubox" data-u="'+u.id+'"><div class="stl"><span class="tag">Unterkunft '+(ui+1)+'</span><span class="stat">'+(u.lat!=null?'<span class="ok">Ort gesetzt</span> · '+u.lat.toFixed(4)+', '+u.lon.toFixed(4):'')+'</span></div><div class="two"><div>'
   +'<label for="'+id+'-name">Name der Unterkunft oder Adresse suchen</label><div class="line"><input id="'+id+'-name" data-uf="name" value="'+esc(u.name||'')+'" placeholder="z. B. Hotel Rila, Sofia"><button type="button" data-uact="search">Suchen</button></div><div class="res"></div>'
-  +'<div style="margin-top:8px"><label for="'+id+'-for">Gilt für</label><select id="'+id+'-for" data-ufor="1">'+uForOpts(u)+'</select></div>'
+  +'<div style="margin-top:8px"><span class="tag">Gilt für</span>'+uForHtml(u,id)+'</div>'
   +'<div class="ex"><div><label for="'+id+'-art">Art</label><select id="'+id+'-art" data-uf="art">'+UART.map(function(a){return '<option'+((u.art||'Hotel')===a?' selected':'')+'>'+a+'</option>';}).join('')+'</select></div><div><label for="'+id+'-tel">Telefon</label><input id="'+id+'-tel" type="tel" data-uf="tel" value="'+esc(u.tel||'')+'"></div></div>'
   +'<div style="margin-top:8px"><label for="'+id+'-addr">Adresse</label><input id="'+id+'-addr" data-uf="addr" value="'+esc(u.addr||'')+'" placeholder="Straße Hausnummer, PLZ Ort, Land"></div>'
   +'<div class="ex"><div><label for="'+id+'-von">Anreise</label><input type="date" id="'+id+'-von" data-uf="von" value="'+esc(u.von||'')+'"></div><div><label for="'+id+'-bis">Abreise</label><input type="date" id="'+id+'-bis" data-uf="bis" value="'+esc(u.bis||'')+'"></div></div>'
   +(S.teams.length?'<div style="margin-top:8px"><span class="tag">Wer übernachtet hier</span><div class="fnl">'+S.teams.map(function(t){return '<label><input type="checkbox" data-uteam="'+t.id+'"'+(u.teams.indexOf(t.id)>=0?' checked':'')+'><span class="swatch" style="background:'+esc(t.farbe)+'"></span>'+esc(t.name||'Team ohne Namen')+'</label>';}).join('')+'</div><span class="small">Ohne Haken gilt die Unterkunft für alle.</span></div>':'')
   +'<div style="margin-top:8px"><label for="'+id+'-hin">Hinweise (Check-in, Frühstück, Parken der Fahrzeuge)</label><input id="'+id+'-hin" data-uf="hinweis" value="'+esc(u.hinweis||'')+'"></div>'
   +'</div><div>'+(u.lat!=null?mapBox('u'+u.id,false,'Karte '+(u.name||'Unterkunft')):'<div class="map"><span class="mapmsg">Nach der Suche erscheint hier der Kartenausschnitt.</span></div>')+'</div></div>';
-  var pl=crewNames(u.teams);
+  var pl=uFreeNames(u);
   h+='<h3>Zimmereinteilung</h3>'+(u.zimmer.length?'<div class="scroll"><table class="zim cards"><thead><tr><th>Zimmer-Nr.</th><th>Zimmerart</th><th>Person 1</th><th>Person 2</th><th>Bemerkung</th><th></th></tr></thead><tbody>'
    +u.zimmer.map(function(z){var b=id+'-z'+z.id+'-';return '<tr data-z="'+z.id+'"><td><input id="'+b+'nr" data-zf="nr" value="'+esc(z.nr||'')+'" style="width:80px"></td><td><select id="'+b+'typ" data-zf="typ"><option value="DZ"'+(z.typ!=='EZ'?' selected':'')+'>Doppelzimmer</option><option value="EZ"'+(z.typ==='EZ'?' selected':'')+'>Einzelzimmer (Aufpreis)</option></select></td><td><input id="'+b+'p1" data-zf="p1" list="pl-'+u.id+'" value="'+esc(z.p1||'')+'"></td><td><input id="'+b+'p2" data-zf="p2" list="pl-'+u.id+'" value="'+esc(z.typ==='EZ'?'':(z.p2||''))+'"'+(z.typ==='EZ'?' disabled placeholder="Einzelzimmer"':'')+'></td><td class="wide"><input id="'+b+'bem" data-zf="bem" value="'+esc(z.bem||'')+'"></td><td><button type="button" class="mini" data-zdel="'+z.id+'">Löschen</button></td></tr>';}).join('')+'</tbody></table></div>':'<p class="mute">Noch keine Zimmer eingeteilt.</p>')
    +'<datalist id="pl-'+u.id+'">'+pl.map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist>'
@@ -1648,9 +1654,11 @@ function drawUnterkunft(){
  cardLabels(host);ensureMapsSoon();
 }
 function uOf(t){var w=t.closest('[data-u]');return w?uById(w.dataset.u):null;}
-function uChanged(u,el,redrawMap){touch('unterkunft');if(el){var sm=el.closest('.ubox').querySelector('[data-zsum]');if(sm)sm.innerHTML=uSumHtml(u);}renderRoadbookSoon();if(redrawMap)ensureMapsSoon();}
+function uChanged(u,el,redrawMap){touch('unterkunft');uFillList(u);if(el){var sm=el.closest('.ubox').querySelector('[data-zsum]');if(sm)sm.innerHTML=uSumHtml(u);}renderRoadbookSoon();if(redrawMap)ensureMapsSoon();}
 $('uedit').addEventListener('input',function(e){var t=e.target,u=uOf(t);if(!u)return;
- if(t.dataset.ufor){var r=u.reg||regionOf();if(t.value===''){u.reg='';u.tour='';}else{u.reg=r;u.tour=t.value==='*'?'':t.value;}touch('unterkunft');setTimeout(drawUnterkunft,0);renderRoadbookSoon();return;}
+ if(t.dataset.utour!=null){var r=u.reg||regionOf();if(!r)return;u.reg=r;var T=uTours(u),v=t.dataset.utour;
+  if(v==='*'){u.tours=[];}else{var i2=T.indexOf(v);if(t.checked&&i2<0)T.push(v);if(!t.checked&&i2>=0)T.splice(i2,1);}u.tour='';
+  touch('unterkunft');setTimeout(drawUnterkunft,0);renderRoadbookSoon();return;}
  if(t.dataset.uf){u[t.dataset.uf]=t.value;uChanged(u,t);return;}
  if(t.dataset.uteam){var i=u.teams.indexOf(t.dataset.uteam);if(t.checked&&i<0)u.teams.push(t.dataset.uteam);if(!t.checked&&i>=0)u.teams.splice(i,1);touch('unterkunft');keepFocus(drawUnterkunft);renderRoadbookSoon();return;}
  var tr=t.closest('tr[data-z]');if(!tr||!t.dataset.zf)return;var z=u.zimmer.find(function(x){return x.id===tr.dataset.z;});if(!z)return;
@@ -1668,7 +1676,7 @@ $('uedit').addEventListener('click',function(e){var t=e.target,u=uOf(t);if(!u)re
 async function uSearch(u,el){if(!u)return;var q=(u.name||u.addr||'').trim(),box=el.querySelector('.res');if(!q)return;
  var cc=parseCoord(q);if(cc){u.lat=cc[0];u.lon=cc[1];touch('unterkunft');drawUnterkunft();renderRoadbook();return;}
  box.textContent='Suche …';try{var r=await placeSearch(q,S.ziel&&S.ziel.lat!=null?[S.ziel.lat,S.ziel.lon]:null);if(!r.length){box.textContent='Kein Treffer. Mit Ort ergänzen oder die Adresse eingeben und suchen.';return;}box._hits=r;box.innerHTML=hitsHtml(r,null);}catch(err){box.innerHTML='<span class="err small">'+esc(netMsg(err))+'</span>';}}
-$('addunterkunft').addEventListener('click',function(){var vis=uList(),last=vis[vis.length-1];var u={reg:regionOf(),tour:(S.tour&&S.tour!=='*')?S.tour:'',id:rid(),name:'',art:'Hotel',addr:'',tel:'',lat:null,lon:null,von:last?last.bis:'',bis:'',teams:[],hinweis:'',zimmer:[]};S.unterkuenfte.push(u);touch('unterkunft');drawUnterkunft();renderRoadbook();var f=$('u-'+u.id+'-name');if(f){f.scrollIntoView({behavior:'smooth',block:'center'});f.focus({preventScroll:true});}});
+$('addunterkunft').addEventListener('click',function(){var vis=uList(),last=vis[vis.length-1];var u={reg:regionOf(),tour:'',tours:(S.tour&&S.tour!=='*')?[S.tour]:[],id:rid(),name:'',art:'Hotel',addr:'',tel:'',lat:null,lon:null,von:last?last.bis:'',bis:'',teams:[],hinweis:'',zimmer:[]};S.unterkuenfte.push(u);touch('unterkunft');drawUnterkunft();renderRoadbook();var f=$('u-'+u.id+'-name');if(f){f.scrollIntoView({behavior:'smooth',block:'center'});f.focus({preventScroll:true});}});
 function uRoomsSorted(u){return (u.zimmer||[]).slice().sort(function(a,b){return String(a.nr||'').localeCompare(String(b.nr||''),'de',{numeric:true});});}
 
 function cardLabels(root){if(!root)return;root.querySelectorAll('table.cards').forEach(function(tb){var hs=[].map.call(tb.querySelectorAll('thead th'),function(th){return th.textContent.trim();});tb.querySelectorAll('tbody tr').forEach(function(tr){[].forEach.call(tr.children,function(td,i){td.setAttribute('data-l',hs[i]||'');if(!hs[i]&&td.querySelector('button'))td.classList.add('wide');});});});}
