@@ -127,6 +127,10 @@ th{font-size:12px;color:var(--mute);font-weight:600}
 .abpos textarea{min-height:56px}
 .fbadge{display:inline-block;min-width:20px;padding:1px 6px;border-radius:4px;font:700 12px/18px var(--f-head);text-align:center;color:#fff;background:#5b6770;margin-right:6px;vertical-align:1px}.fbadge.tp{background:#0a4fa3;color:#ffd84d}.fbadge.sg{background:#1d5c45}
 tr.bpaid td{background:color-mix(in srgb,var(--ok,#2e7d32) 9%,transparent)}
+.msel{position:relative}.msel summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.msel summary::-webkit-details-marker{display:none}.msel summary::after{content:'▾';opacity:.7}.msel[open] summary::after{content:'▴'}.msel summary span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mselbox{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:6px;max-height:280px;overflow:auto}
+.mselbox label{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;font-weight:400;cursor:pointer}.mselbox label:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}
 .covbox{display:flex;gap:14px;align-items:flex-start;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.covbox canvas{width:150px;height:auto;aspect-ratio:210/297;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.25);flex:0 0 auto;background:var(--line)}.covbox>div{min-width:0}.covbox p{margin:4px 0 8px}
 .vhf{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
 .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:10px 0}
@@ -1613,8 +1617,12 @@ $('tank').addEventListener('change',function(e){if(e.target.tagName==='SELECT')t
 var UART=['Hotel','Pension','Einrichtung','Gemeindehaus','Privat','Sonstiges'];
 function uTours(u){if(!Array.isArray(u.tours))u.tours=u.tour?[u.tour]:[];return u.tours;}
 function uVis(u){var r=regionOf();if(!u.reg)return true;if(!r)return true;if(u.reg!==r)return false;var T=uTours(u);if(!S.tour||S.tour==='*'||!T.length)return true;return T.indexOf(S.tour)>=0;}
-function uForHtml(u,id){var r=u.reg||regionOf(),T=r?(TOURS[r]||[]):[],sel=u.reg?uTours(u):[];if(!r)return '<span class="small">Gilt für alle Regionen. Für eine Zuordnung oben eine Region wählen.</span>';
- return '<div class="fnl">'+'<label><input type="checkbox" data-utour="*"'+(u.reg&&!sel.length?' checked':'')+'>alle Touren '+esc(r)+'</label>'+T.map(function(t){return '<label><input type="checkbox" data-utour="'+esc(t)+'"'+(sel.indexOf(t)>=0?' checked':'')+'>'+esc(t)+'</label>';}).join('')+'</div>'+(!u.reg?'<span class="small">Bisher für alle Regionen. Mit einem Haken wird sie '+esc(r)+' zugeordnet.</span>':'');}
+var uMselOpen='';
+function uForHtml(u,id){var r=u.reg||regionOf(),T=r?(TOURS[r]||[]):[],sel=u.reg?uTours(u):[];if(!r)return '<div class="small">Gilt für alle Regionen. Für eine Zuordnung oben eine Region wählen.</div>';
+ var sum=!u.reg?'alle Regionen':sel.length?sel.join(', '):'alle Touren '+r;
+ return '<details class="msel" data-msel="'+u.id+'"'+(uMselOpen===u.id?' open':'')+'><summary id="'+id+'-for"><span>'+esc(sum)+'</span></summary><div class="mselbox">'
+  +'<label><input type="checkbox" data-utour="*"'+(u.reg&&!sel.length?' checked':'')+'>alle Touren '+esc(r)+'</label>'
+  +T.map(function(t){return '<label><input type="checkbox" data-utour="'+esc(t)+'"'+(sel.indexOf(t)>=0?' checked':'')+'>'+esc(t)+'</label>';}).join('')+'</div></details>';}
 function uList(){return S.unterkuenfte.filter(uVis);}
 function uFor(u){var T=uTours(u);return !u.reg?'alle Regionen':u.reg+(T.length?' – '+T.join(', '):' (alle Touren)');}
 function uById(id){return S.unterkuenfte.find(function(u){return u.id===id;});}
@@ -1637,7 +1645,7 @@ function drawUnterkunft(){
  host.innerHTML=(UL.length?UL.map(function(u,ui){var id='u-'+u.id;
   var h='<div class="ubox" data-u="'+u.id+'"><div class="stl"><span class="tag">Unterkunft '+(ui+1)+'</span><span class="stat">'+(u.lat!=null?'<span class="ok">Ort gesetzt</span> · '+u.lat.toFixed(4)+', '+u.lon.toFixed(4):'')+'</span></div><div class="two"><div>'
   +'<label for="'+id+'-name">Name der Unterkunft oder Adresse suchen</label><div class="line"><input id="'+id+'-name" data-uf="name" value="'+esc(u.name||'')+'" placeholder="z. B. Hotel Rila, Sofia"><button type="button" data-uact="search">Suchen</button></div><div class="res"></div>'
-  +'<div style="margin-top:8px"><span class="tag">Gilt für</span>'+uForHtml(u,id)+'</div>'
+  +'<div style="margin-top:8px"><label for="'+id+'-for">Gilt für (Mehrfachauswahl)</label>'+uForHtml(u,id)+'</div>'
   +'<div class="ex"><div><label for="'+id+'-art">Art</label><select id="'+id+'-art" data-uf="art">'+UART.map(function(a){return '<option'+((u.art||'Hotel')===a?' selected':'')+'>'+a+'</option>';}).join('')+'</select></div><div><label for="'+id+'-tel">Telefon</label><input id="'+id+'-tel" type="tel" data-uf="tel" value="'+esc(u.tel||'')+'"></div></div>'
   +'<div style="margin-top:8px"><label for="'+id+'-addr">Adresse</label><input id="'+id+'-addr" data-uf="addr" value="'+esc(u.addr||'')+'" placeholder="Straße Hausnummer, PLZ Ort, Land"></div>'
   +'<div class="ex"><div><label for="'+id+'-von">Anreise</label><input type="date" id="'+id+'-von" data-uf="von" value="'+esc(u.von||'')+'"></div><div><label for="'+id+'-bis">Abreise</label><input type="date" id="'+id+'-bis" data-uf="bis" value="'+esc(u.bis||'')+'"></div></div>'
@@ -1658,12 +1666,14 @@ function uChanged(u,el,redrawMap){touch('unterkunft');uFillList(u);if(el){var sm
 $('uedit').addEventListener('input',function(e){var t=e.target,u=uOf(t);if(!u)return;
  if(t.dataset.utour!=null){var r=u.reg||regionOf();if(!r)return;u.reg=r;var T=uTours(u),v=t.dataset.utour;
   if(v==='*'){u.tours=[];}else{var i2=T.indexOf(v);if(t.checked&&i2<0)T.push(v);if(!t.checked&&i2>=0)T.splice(i2,1);}u.tour='';
-  touch('unterkunft');setTimeout(drawUnterkunft,0);renderRoadbookSoon();return;}
+  uMselOpen=u.id;touch('unterkunft');setTimeout(drawUnterkunft,0);renderRoadbookSoon();return;}
  if(t.dataset.uf){u[t.dataset.uf]=t.value;uChanged(u,t);return;}
  if(t.dataset.uteam){var i=u.teams.indexOf(t.dataset.uteam);if(t.checked&&i<0)u.teams.push(t.dataset.uteam);if(!t.checked&&i>=0)u.teams.splice(i,1);touch('unterkunft');keepFocus(drawUnterkunft);renderRoadbookSoon();return;}
  var tr=t.closest('tr[data-z]');if(!tr||!t.dataset.zf)return;var z=u.zimmer.find(function(x){return x.id===tr.dataset.z;});if(!z)return;
  z[t.dataset.zf]=t.value;if(t.dataset.zf==='typ'){if(z.typ==='EZ')z.p2='';touch('unterkunft');keepFocus(drawUnterkunft);renderRoadbookSoon();return;}uChanged(u,t);});
 $('uedit').addEventListener('change',function(e){if(e.target.tagName==='SELECT'&&e.target.dataset.zf==='typ'){var ev=new Event('input',{bubbles:true});e.target.dispatchEvent(ev);}});
+document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.msel'))return;var o=document.querySelectorAll('.msel[open]');for(var k=0;k<o.length;k++)o[k].open=false;uMselOpen='';});
+$('uedit').addEventListener('toggle',function(e){var d=e.target;if(d.classList&&d.classList.contains('msel'))uMselOpen=d.open?d.dataset.msel:(uMselOpen===d.dataset.msel?'':uMselOpen);},true);
 $('uedit').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.dataset.uf==='name'){e.preventDefault();uSearch(uOf(e.target),e.target.closest('.ubox'));}});
 $('uedit').addEventListener('click',function(e){var t=e.target,u=uOf(t);if(!u)return;
  var hb=t.closest('[data-hit]');if(hb){var d=hb.closest('.res')._hits[+hb.dataset.hit];u.name=d.name;if(d.addr)u.addr=d.addr;u.lat=Math.round(d.lat*1e6)/1e6;u.lon=Math.round(d.lon*1e6)/1e6;touch('unterkunft');drawUnterkunft();renderRoadbook();return;}
