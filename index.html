@@ -622,8 +622,8 @@ function label(s){return s.k==='start'?'Start':s.k==='ziel'?'Ziel':VT[s.o.type]|
 function fixLeg(){var n=S.vias.length+1;while(S.legKm.length<n)S.legKm.push(0);S.legKm.length=n;}
 function stationsKm(){fixLeg();var c=[0],t=0;for(var i=0;i<S.legKm.length;i++){t+=num(S.legKm[i]);c.push(t);}return c;}
 function dwellOf(s){return s.k==='via'?num(s.o.dwell):0;}
-function needCard(){return num(S.lkw)>0||num(S.bus)>0;}
-var CARDTXT='Bei Lkw und Reisebussen muss die Fahrerkarte immer gesteckt sein. Beim Fahrerwechsel die Karte des neuen Fahrers stecken.';
+function needCard(){return num(S.lkw)>0;}
+var CARDTXT='Bei Lkw muss die Fahrerkarte immer gesteckt sein. Beim Fahrerwechsel im Lkw die Karte des neuen Fahrers stecken.';
 var MEDTXT='Medizinischer Notfall: zuerst das medizinische Personal der Tour ansprechen. In akuten Notfällen Notruf 112, rund um die Uhr erreichbar.';
 function stName(s){return s.o.name||(isPause(s)?'Pausenort offen':label(s));}
 
@@ -1087,7 +1087,7 @@ function renderRoadbook(){
    +(s.o.addr?'<span>Adresse</span><b style="font-weight:500">'+esc(s.o.addr)+'</b>':'')
    +(s.o.lat!=null?'<span>Koord.</span><b>'+s.o.lat.toFixed(5)+', '+s.o.lon.toFixed(5)+' · <a href="https://www.openstreetmap.org/?mlat='+s.o.lat+'&mlon='+s.o.lon+'#map=16/'+s.o.lat+'/'+s.o.lon+'" target="_blank" rel="noopener">OSM</a></b>':'')+'</div>'
    +(s.o.note?'<p style="margin:6px 0 0">'+esc(s.o.note)+'</p>':'')
-   +(isPause(s)&&needCard()?'<span class="split">Fahrerwechsel: Fahrerkarte des neuen Fahrers stecken</span>':'')
+   +(isPause(s)&&needCard()?'<span class="split">Fahrerwechsel Lkw: Fahrerkarte des neuen Fahrers stecken</span>':'')
    +splits.map(function(t){return '<span class="split"><span class="swatch" style="background:'+esc(t.farbe)+'"></span>Konvoiteilung: '+esc(t.name||'Team')+' fährt weiter nach '+esc(t.ziel&&t.ziel.name||'(Ziel offen)')+'</span>';}).join('')
    +r.warn.map(function(x){return '<span class="wn">'+esc(x)+'</span>';}).join('')+'</div>'
    +'<div>'+(s.o.lat!=null?mapBox(s.key,false,'Karte '+label(s)):'')+'</div></div>';
@@ -1311,7 +1311,7 @@ async function buildPdf(opt){
    y2-=box(MG,y2,'Abfahrt / Ankunft',stamp(a.dep)+'  /  '+stamp(b.arr),10.5);
    y=Math.min(y2,yR-6);
    var notes2=e.hints.map(function(h){return stName(h.s)+(h.s.o.note?': '+h.s.o.note:'');}).concat(e.splits.map(function(t){return 'Konvoiteilung: '+(t.name||'Team')+' fährt weiter nach '+(t.ziel&&t.ziel.name||'?');}));
-   if(b.dwell)notes2.push(label(b.s)+': '+Math.round(b.dwell)+' Min. Aufenthalt'+(isPause(b.s)&&needCard()?', Fahrerkarte des neuen Fahrers stecken':''));
+   if(b.dwell)notes2.push(label(b.s)+': '+Math.round(b.dwell)+' Min. Aufenthalt'+(isPause(b.s)&&needCard()?', Lkw: Fahrerkarte des neuen Fahrers stecken':''));
    notes2.forEach(function(n){para('> '+n,10,true,blue,0);});y-=6;
    var dh=colW*360/640,oh=Math.min(CW*360/640,y-MG-30-dh-40);
    await imgAt('et'+ei,MG,y-12,CW,oh,'ÜBERSICHT');y-=oh+30;
